@@ -147,3 +147,10 @@ The S3 bucket needs a policy like the next one, or more permissive, in order to 
      ]
  }
 ```
+
+
+
+PYTHON 3 
+virtualenv -p python3 venv
+python3 -m pip install -r requirements.txt
+

@@ -1,12 +1,11 @@
 import sys
 import getopt
 
-import helpers_s3
-import helpers_local
-import helpers_files
-import helpers_server
+from src.server.helpers import create_ssh_client_or_die
+from src.s3.helpers import create_s3_client_or_die
+from src.local.file import validate_local_folder_or_die
 
-import commands
+from . import commands
 
 ALLOWED_PARAMETERS = [
 	"command",    # Name of the command we want to execute (from commands.py)
@@ -37,7 +36,7 @@ def parse_raw_settings(raw_settings):
 
 	if set(("secret","key","bucket")).issubset(raw_settings):
 		# Setting S3 bucket
-		settings['s3_client'] = helpers_s3.create_s3_client_or_die(raw_settings['key'],raw_settings['bucket'],raw_settings['secret'])
+		settings['s3_client'] = create_s3_client_or_die(raw_settings['key'],raw_settings['bucket'],raw_settings['secret'])
 		settings['s3_bucket'] = raw_settings['bucket']
 
 	# Dry run is not mandatory (for example, to list a bucket content)
@@ -45,16 +44,16 @@ def parse_raw_settings(raw_settings):
 		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
 
 	if "local" in raw_settings:
-		settings['local'] = helpers_local.validate_local_folder_or_die(raw_settings['local'])
+		settings['local'] = validate_local_folder_or_die(raw_settings['local'])
 
 	if "hash-file" in raw_settings:
-		settings['hash-file'] = helpers_local.validate_local_folder_or_die(raw_settings['hash-file'])
+		settings['hash-file'] = validate_local_folder_or_die(raw_settings['hash-file'])
 
 	settings['serv-folder'] = raw_settings['serv-folder'] if 'serv-folder' in raw_settings else ''
 	if set(("serv-url","serv-user","serv-pass","serv-folder")).issubset(raw_settings):
-		print "Creating SSH client..."
-		print raw_settings
-		ssh_client = helpers_server.create_ssh_client_or_die(
+		print ("Creating SSH client...")
+		print (raw_settings)
+		ssh_client = create_ssh_client_or_die(
 			server=raw_settings['serv-url'], 
 			username=raw_settings['serv-user'], 
 			password=raw_settings['serv-pass'],
@@ -83,9 +82,9 @@ def read_raw_settings():
 			[param+"=" for param in ALLOWED_PARAMETERS] # Convert to ['command=', 'key=', 'secret=', ...]
 		)
 	except getopt.GetoptError as e:
-		print "Wrong parameters: {}".format(e)
-		print "Mandatory parameter is '--command'"
-		print "Allowed parameters are: {}".format(', '.join(ALLOWED_PARAMETERS))
+		print ("Wrong parameters: {}".format(e))
+		print ("Mandatory parameter is '--command'")
+		print ("Allowed parameters are: {}".format(', '.join(ALLOWED_PARAMETERS)))
 		sys.exit(2)
 
 	# Start parsing values and adding them to settings object:
@@ -111,9 +110,9 @@ def null_iterator(settings, function_callback):
 	function_callback(settings)
 
 def command_list_commands(settings):
-	print "LISTING COMMANDS"
+	print ("LISTING COMMANDS")
 	for name, data in commands.command.items():
-		print "\n  Command: {}".format(name)
-		print "    {}".format(data.get('description', '(no description provided)'))
-		print "    Mandatory values: {}".format(data['mandatory_values'])
-		print "    Example: {}".format(data.get('example', '(no example provided)'))
+		print ("\n  Command: {}".format(name))
+		print ("    {}".format(data.get('description', '(no description provided)')))
+		print ("    Mandatory values: {}".format(data['mandatory_values']))
+		print ("    Example: {}".format(data.get('example', '(no example provided)')))
