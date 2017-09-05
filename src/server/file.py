@@ -1,7 +1,11 @@
 
-# Valid for folders and files
-def get_size(settings, server_abs_path):
-	command = "du --apparent-size --block-size=1 '"+server_abs_path+"' | awk '{print $1}'"
+def get_folder_size(settings, server_abs_path):
+	command = "du -k -s '"+server_abs_path+"' | awk '{print $1}'"
+	size = settings['server_client'].execute(command)
+	return size[0].rstrip()
+
+def get_file_size(settings, server_abs_path):
+	command = "du -k '"+server_abs_path+"' | awk '{print $1}'"
 	size = settings['server_client'].execute(command)
 	return size[0].rstrip()
 

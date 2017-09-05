@@ -18,8 +18,8 @@ from src import commands
 # UnicodeDecodeError: 'ascii' codec can't decode byte 0xcc in position 56: ordinal not in range(128)
 # When we process files that contains non standard characters
 # FOR PYTHON 2
-reload(sys)  
-sys.setdefaultencoding('utf8')
+#reload(sys)  
+#sys.setdefaultencoding('utf8')
 
 print ("   Reading parameters from terminal....")
 raw_settings = helpers.read_raw_settings()

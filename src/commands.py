@@ -23,7 +23,7 @@ command['server_folders_info'] = {
 	'command': 'server_commands.folders_info',
 	'mandatory_values': ['serv-url', 'serv-user', 'serv-pass', 'serv-key', 'serv-folder'],
 	'iterator': 'server_iterators.folders',
-	'example': 'python datata.py --command="server_folders_info" --local="/Users/me/Deleteme/files/"',
+	'example': 'python datata.py --command="server_folders_info" --serv-url="192.168.100.72" --serv-user="vagrant" --serv-pass="vagrant" --serv-key="/dev/null" --serv-folder="/var/www/wordpress/wp-content/themes/"',
 	'description': 'List all folders for given path, plus extra information'
 }
 command['server_files_info'] = {

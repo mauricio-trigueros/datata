@@ -1,18 +1,23 @@
 import os
 import hashlib
+import subprocess
 
 def get_folder_size(settings, local_rel_path):
 	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	total_size = 0
-	for dirpath, dirnames, filenames in os.walk(full_local_path):
-		for f in filenames:
-			fp = os.path.join(dirpath, f)
-			total_size += os.path.getsize(fp)
-	return total_size
+	res =  subprocess.check_output("du -k -s '"+full_local_path+"' | awk '{print $1}'", shell=True)
+	return res.rstrip()
+	# total_size = 0
+	# for dirpath, dirnames, filenames in os.walk(full_local_path):
+	# 	for f in filenames:
+	# 		fp = os.path.join(dirpath, f)
+	# 		total_size += os.path.getsize(fp)
+	# return total_size
 
 def get_file_size(settings, local_rel_path):
 	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	return os.path.getsize(full_local_path)
+	res =  subprocess.check_output("du -k '"+full_local_path+"' | awk '{print $1}'", shell=True)
+	return res.rstrip()
+	#return os.path.getsize(full_local_path)
 
 def count_files_in_folder(settings, local_rel_path):
 	full_local_path = "{}{}".format(settings['local'], local_rel_path)

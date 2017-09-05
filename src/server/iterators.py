@@ -31,17 +31,15 @@ def iterate_over_files(settings, rootPath, relativePath, functionCallback):
 
 def iterate_over_folders(settings, rootPath, relativePath, functionCallback):
 	remote_folder_path = "{}{}".format(rootPath,relativePath)
-	folderContent = settings['server_client'].execute('ls '+remote_folder_path)
+	folderContent = settings['server_client'].execute('ls -F '+remote_folder_path+' | grep /')
 	#print "Remote folder {} has items {}".format(remote_folder_path, len(folderContent))
 	for index, item in enumerate(folderContent):
-		item = item.rstrip() #remove last line break
+		item = item.rstrip().encode('utf-8') #remove last line break
 		item_path = "{}{}{}".format(rootPath,relativePath,item)
-		#print "   Processing {}".format(item_path),
-		if not remote_item_is_file(settings['server_client'], item_path):
-			functionCallback(settings, "{}{}".format(relativePath, item))
-			iterate_over_folders(
-				settings, 
-				rootPath, # rootPath is always the same
-				"{}{}/".format(relativePath,item), # relativePath is one level deeper
-				functionCallback
-			)
+		functionCallback(settings, "{}{}".format(relativePath, item))
+		iterate_over_folders(
+			settings, 
+			rootPath, # rootPath is always the same
+			"{}{}".format(relativePath,item), # relativePath is one level deeper
+			functionCallback
+		)
