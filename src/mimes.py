@@ -29,3 +29,13 @@ def get_content_type_per_extension(file_extension):
 	elif file_extension in ['js']:                    return "application/javascript"
 	elif file_extension in ['svg']:                   return "image/svg+xml"
 	else: return "binary/octet-stream"
+
+def is_png(file_path):
+	extension = get_file_extension(file_path).lower()
+	if extension in ['png']:  return True
+	else: return False
+
+def is_jpg(file_path):
+	extension = get_file_extension(file_path).lower()
+	if extension in ['jpeg','jpg','jpe']:  return True
+	else: return False

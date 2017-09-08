@@ -2,35 +2,23 @@ import os
 import hashlib
 import subprocess
 
-def get_folder_size(settings, local_rel_path):
-	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	res =  subprocess.check_output("du -k -s '"+full_local_path+"' | awk '{print $1}'", shell=True)
+def get_folder_size(abs_path):
+	res =  subprocess.check_output("du -k -s '"+abs_path+"' | awk '{print $1}'", shell=True)
 	return res.rstrip()
-	# total_size = 0
-	# for dirpath, dirnames, filenames in os.walk(full_local_path):
-	# 	for f in filenames:
-	# 		fp = os.path.join(dirpath, f)
-	# 		total_size += os.path.getsize(fp)
-	# return total_size
 
-def get_file_size(settings, local_rel_path):
-	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	res =  subprocess.check_output("du -k '"+full_local_path+"' | awk '{print $1}'", shell=True)
+def get_file_size(abs_path):
+	res =  subprocess.check_output("du -k '"+abs_path+"' | awk '{print $1}'", shell=True)
 	return res.rstrip()
-	#return os.path.getsize(full_local_path)
 
-def count_files_in_folder(settings, local_rel_path):
-	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	items = len([name for name in os.listdir(full_local_path) if os.path.isfile(os.path.join(full_local_path, name))])
+def count_files_in_folder(abs_path):
+	items = len([name for name in os.listdir(abs_path) if os.path.isfile(os.path.join(abs_path, name))])
 	return items
 
-def get_file_hash(settings, local_rel_path):
-	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	return hashlib.md5(open(full_local_path,'rb').read()).hexdigest()
+def get_file_hash(abs_path):
+	return hashlib.md5(open(abs_path,'rb').read()).hexdigest()
 
-def local_file_exist(settings, local_rel_path):
-	full_local_path = "{}{}".format(settings['local'], local_rel_path)
-	return os.path.isfile(full_local_path)
+def local_file_exist(abs_path):
+	return os.path.isfile(abs_path)
 
 # If we have full file path "/var/www/project/index.html", and we want to verify that this local folder
 # "/var/www/project" already exist (if LOCAL_FOLDER is /var/www/ and s3_key is project/index.html, then

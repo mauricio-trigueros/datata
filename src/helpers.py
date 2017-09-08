@@ -14,6 +14,7 @@ ALLOWED_PARAMETERS = [
 	"bucket",     # AWS Bucket name
 	"prefix",     # Prefix to start iterating from an S3 bucket, ending with "/", like "assets/images/"
 	"local",      # Local full path, it needs to exist
+	"local-dest", # Locall full path for destination, it needs to exist
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run
 	"hash-file",  # Path to the file containing hashes, like "/Users/me/Downloads/hash.txt"
 	"serv-url",   # Server IP, like "192.168.100.90"
@@ -25,7 +26,7 @@ ALLOWED_PARAMETERS = [
 	"mysql-port",     # MYSQL server port
 	"mysql-user",     # MYSQL server username
 	"mysql-pass",     # MYSQL server password
-	"mysql-db"
+	"mysql-db"        # MYSQL 
 ]
 
 def parse_raw_settings(raw_settings):
@@ -45,6 +46,9 @@ def parse_raw_settings(raw_settings):
 
 	if "local" in raw_settings:
 		settings['local'] = validate_local_folder_or_die(raw_settings['local'])
+
+	if "local-dest" in raw_settings:
+		settings['local-dest'] = validate_local_folder_or_die(raw_settings['local-dest'])
 
 	if "hash-file" in raw_settings:
 		settings['hash-file'] = validate_local_folder_or_die(raw_settings['hash-file'])

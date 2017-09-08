@@ -72,6 +72,13 @@ command['local_files_info'] = {
 	'example': 'python datata.py --command="local_files_info" --local="/Users/me/Deleteme/files/"',
 	'description': 'List all files for a given path, plus extra information'
 }
+command['compress_images'] = {
+	'command': 'local_commands.compress_images',
+	'mandatory_values': ['local', 'local-dest'],
+	'iterator': 'local_iterators.files',
+	'example': 'python datata.py --command="compress_images" --local="/Users/me/Deleteme/files/" --local-dest="/Users/me/Deleteme/parsed/"',
+	'description': 'Compress pictures'
+}
 
 ##
 # S3 commands
