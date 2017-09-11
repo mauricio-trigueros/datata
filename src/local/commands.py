@@ -44,7 +44,7 @@ def compress_images(settings, local_rel_path):
 		os.system("jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(original_file, compress_file))
 	elif is_png(local_rel_path):
 		print ("--png"),
-		os.system("pngquant --force --skip-if-larger --quality 40-100 --speed 1 --output '{}' '{}'".format(compress_file, original_file))
+		os.system("pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(compress_file, original_file))
 	else:
 		print ("--not-image")
 		return
