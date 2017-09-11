@@ -74,10 +74,10 @@ command['local_files_info'] = {
 }
 command['compress_images'] = {
 	'command': 'local_commands.compress_images',
-	'mandatory_values': ['local', 'local-dest'],
+	'mandatory_values': ['local', 'local-dest', 'strategy'],
 	'iterator': 'local_iterators.files',
-	'example': 'python datata.py --command="compress_images" --local="/Users/me/Deleteme/files/" --local-dest="/Users/me/Deleteme/parsed/"',
-	'description': 'Compress pictures'
+	'example': 'python datata.py --command="compress_images" --local="/Users/me/Deleteme/files/" --local-dest="/Users/me/Deleteme/parsed/" --strategy="skip-if-exist"',
+	'description': 'Compress pictures. If you want to overwrite, select overwrite strategy, otherwise skip-if-exist'
 }
 
 ##

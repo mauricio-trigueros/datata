@@ -17,6 +17,7 @@ ALLOWED_PARAMETERS = [
 	"local-dest", # Locall full path for destination, it needs to exist
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run
 	"hash-file",  # Path to the file containing hashes, like "/Users/me/Downloads/hash.txt"
+	"strategy",
 	"serv-url",   # Server IP, like "192.168.100.90"
 	"serv-user",  # User to login into the server
 	"serv-pass",  # If we want to use SSH password (instead of SSH key)
@@ -52,6 +53,9 @@ def parse_raw_settings(raw_settings):
 
 	if "hash-file" in raw_settings:
 		settings['hash-file'] = validate_local_folder_or_die(raw_settings['hash-file'])
+
+	if "strategy" in raw_settings:
+		settings['strategy'] = raw_settings['strategy']
 
 	settings['serv-folder'] = raw_settings['serv-folder'] if 'serv-folder' in raw_settings else ''
 	if set(("serv-url","serv-user","serv-pass","serv-folder")).issubset(raw_settings):

@@ -7,6 +7,7 @@ from .file import local_file_exist
 from .file import verify_and_create_local_folder_path
 from src.mimes import is_jpg, is_png
 import os
+import sys
 
 def print_path(settings, local_rel_path):
 	full_path = "{}{}".format(settings['local'], local_rel_path)
@@ -33,21 +34,34 @@ def compress_images(settings, local_rel_path):
 	
 	# We need to verify that compress_file folder structure exist (may be we need to generate folders)
 	verify_and_create_local_folder_path(compress_file)
-	
-	# First we need to delete compress_file (if already exist)
-	if os.path.isfile(compress_file):
-		os.remove(compress_file),
-		print ("--prev-compressed-removed"),
 
+	# Get the command to execute, if JPG or PNG, or return if no picture
 	if is_jpg(local_rel_path):
 		print ("--jpg"),
-		os.system("jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(original_file, compress_file))
+		command = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(original_file, compress_file)
 	elif is_png(local_rel_path):
 		print ("--png"),
-		os.system("pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(compress_file, original_file))
+		command = "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(compress_file, original_file)
 	else:
 		print ("--not-image")
 		return
+
+	# Execute previous instructions, depending on strategy
+	if settings['strategy'] == 'overwrite':
+		# We need to remove destination file
+		if os.path.isfile(compress_file):
+			os.remove(compress_file),
+			print ("--prev-compressed-removed"),
+	elif settings['strategy'] == 'skip-if-exist':
+		# If file exist, finish
+		if os.path.isfile(compress_file):
+			print ("--file-exist")
+			return
+	else:
+		sys.exit("Strategy  '{}' not found".format(settings['strategy']))
+
+	# Execute command
+	os.system(command)
 
 	if (local_file_exist(compress_file)) and (int(get_file_size(compress_file)) > 0) :
 		print ("--compressed"),
