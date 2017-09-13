@@ -5,6 +5,7 @@ from src.mimes import get_file_extension
 from src.mimes import get_content_type_per_extension
 from src.mimes import get_file_extension
 from src.mimes import get_cache_control_per_extension
+from src.mimes import forbidden_to_upload
 
 def print_path(settings, s3_key):
 	print ("        '{}'   ".format(s3_key))
@@ -36,6 +37,10 @@ def upload_files(settings, local_rel_path):
 	full_local_path = "{}{}".format(settings["local"], local_rel_path)
 	file_extension = get_file_extension(local_rel_path)
 	print (" Uploading '{}' ".format(local_rel_path)),
+
+	if forbidden_to_upload(full_local_path):
+		print ("--forbidden-to-upload")
+		return
 	
 	# If files are the same, then they are untouched
 	if local_and_s3_files_are_equals(settings, local_rel_path):
