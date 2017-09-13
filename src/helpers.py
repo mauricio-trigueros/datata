@@ -60,7 +60,7 @@ def parse_raw_settings(raw_settings):
 	settings['serv-folder'] = raw_settings['serv-folder'] if 'serv-folder' in raw_settings else ''
 	if set(("serv-url","serv-user","serv-pass","serv-folder")).issubset(raw_settings):
 		print ("Creating SSH client...")
-		print (raw_settings)
+		#print (raw_settings)
 		ssh_client = create_ssh_client_or_die(
 			server=raw_settings['serv-url'], 
 			username=raw_settings['serv-user'], 

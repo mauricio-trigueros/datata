@@ -1,12 +1,14 @@
-from src.local.file import get_file_hash
+from src.local.file import get_file_hash as get_local_file_hash
+from src.server.file import get_file_hash as get_server_file_hash
 from src.local.file import local_file_exist
 from botocore.exceptions import ClientError
 
 # Compares if two files, one in S3 bucket, and one in local, are the same
 # relative_path is the S3 key
 def local_and_s3_files_are_equals(settings, relative_path):
+	full_local_path = "{}{}".format(settings['local'], relative_path)
 	# If local file do not exist, then files are not equals!!
-	if not local_file_exist(settings, relative_path):
+	if not local_file_exist(full_local_path):
 		print ("--local-missing"),
 		return False
 	# Try to get remote file
@@ -22,7 +24,7 @@ def local_and_s3_files_are_equals(settings, relative_path):
 			raise 'error'
 
 	# Local file and S3 file exist, compare etags
-	if (get_file_hash(settings, relative_path) == remote_object['ETag'][1:-1]):
+	if (get_local_file_hash(full_local_path) == remote_object['ETag'][1:-1]):
 		print ("--same-hash"),
 		return True
 	else:
@@ -31,11 +33,11 @@ def local_and_s3_files_are_equals(settings, relative_path):
 
 def local_and_server_files_are_equals(settings, full_local_path, full_remote_path):
 	# If local file do not exist, then files are not equals!!
-	if not os.path.isfile(full_local_path):
+	if not local_file_exist(full_local_path):
 		print ("--local-missing"),
 		return False
 
-	if (helpers_local.get_local_hash(full_local_path) == server_file.get_file_hash(settings, full_remote_path)):
+	if (get_local_file_hash(full_local_path) == get_server_file_hash(settings, full_remote_path)):
 		print ("--same-hash"),
 		return True
 	else:

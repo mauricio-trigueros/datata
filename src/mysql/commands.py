@@ -5,7 +5,7 @@ def full_backup(settings):
 	print ("  Full database backup")
 	timeNow = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 	backupFileIso = "{}/mysql_full_backup_{}.sql".format(settings['local'],timeNow)
-	print (settings)
+	#print (settings)
 	dumpDbCommand = "mysqldump --single-transaction --user={} --password={} --host={} --port={} {} > {}".format(
 		settings['mysql-user'],
 		settings['mysql-pass'],
@@ -13,5 +13,6 @@ def full_backup(settings):
 		settings['mysql-port'],
 		settings['mysql-db'],
 		backupFileIso)
-	print ("  Executing command '{}'".format(dumpDbCommand))
+	print ("  Dumping database....")
 	os.system(dumpDbCommand)
+	print ("  Done!!")

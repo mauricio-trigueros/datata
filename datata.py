@@ -23,7 +23,7 @@ from src import commands
 
 print ("   Reading parameters from terminal....")
 raw_settings = helpers.read_raw_settings()
-print (raw_settings)
+#print (raw_settings)
 #print "   Parsing parameters...."
 settings = helpers.parse_raw_settings(raw_settings)
 #print settings

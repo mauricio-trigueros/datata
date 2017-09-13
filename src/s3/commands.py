@@ -1,7 +1,10 @@
 from src.comparators import local_and_s3_files_are_equals
 from src.local.file import verify_and_create_local_folder_path
+from src.local.file import get_file_hash
 from src.mimes import get_file_extension
 from src.mimes import get_content_type_per_extension
+from src.mimes import get_file_extension
+from src.mimes import get_cache_control_per_extension
 
 def print_path(settings, s3_key):
 	print ("        '{}'   ".format(s3_key))
@@ -31,7 +34,7 @@ def download_files(settings, s3_key):
 
 def upload_files(settings, local_rel_path):
 	full_local_path = "{}{}".format(settings["local"], local_rel_path)
-	file_extension = helpers_files.get_file_extension(local_rel_path)
+	file_extension = get_file_extension(local_rel_path)
 	print (" Uploading '{}' ".format(local_rel_path)),
 	
 	# If files are the same, then they are untouched
@@ -50,12 +53,12 @@ def upload_files(settings, local_rel_path):
 			Body=open(full_local_path, 'rb'),
 			Bucket=settings['s3_bucket'],
 			Key=local_rel_path,
-			ContentType=helpers_files.get_content_type_per_extension(file_extension),
-			CacheControl=helpers_files.get_cache_control_per_extension(file_extension)
+			ContentType=get_content_type_per_extension(file_extension),
+			CacheControl=get_cache_control_per_extension(file_extension)
 		)
 		
 		# Now we need to validate the upload
-		if (helpers_local.get_local_hash(full_local_path) == result['ETag'][1:-1]):
+		if (get_file_hash(full_local_path) == result['ETag'][1:-1]):
 			print ("--verified --DONE")
 			return
 		else:
@@ -66,8 +69,8 @@ def upload_files(settings, local_rel_path):
 # It always adds a cache-control, based on file_extension
 # If not file_extension is found, it adds the default cache-control
 def set_cache_control(settings, s3_key):
-	file_extension = helpers_files.get_file_extension(s3_key)
-	cache_control  = helpers_files.get_cache_control_per_extension(file_extension)
+	file_extension = get_file_extension(s3_key)
+	cache_control  = get_cache_control_per_extension(file_extension)
 	# If the file extension is not recognized, then cache_control is false, we can not add cache to a file type that 
 	# we do not know (it does not match any file known file extension)
 	print ("        '{}'   ".format(s3_key, file_extension)),
