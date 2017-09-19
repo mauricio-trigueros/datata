@@ -23,6 +23,8 @@ ALLOWED_PARAMETERS = [
 	"serv-pass",  # If we want to use SSH password (instead of SSH key)
 	"serv-key",   # Path to the SSH key to connect to the server
 	"serv-folder", # Folder inside the server, like "/var/www/myproject/"
+	"s3-prefix", 
+	"s3-storage",
 	"mysql-host",     # MYSQL server url
 	"mysql-port",     # MYSQL server port
 	"mysql-user",     # MYSQL server username
@@ -56,6 +58,16 @@ def parse_raw_settings(raw_settings):
 
 	if "strategy" in raw_settings:
 		settings['strategy'] = raw_settings['strategy']
+
+	if "s3-prefix" in raw_settings:
+		settings['s3-prefix'] = raw_settings['s3-prefix']
+
+	if "s3-storage" in raw_settings:
+		# We plug this value directly in boto (http://boto3.readthedocs.io/en/latest/reference/services/s3.html)
+		if raw_settings['s3-storage'] in ['STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA']:
+			settings['s3-storage'] = raw_settings['s3-storage']
+		else:
+			sys.exit("Parameter s3-storage '{}' not valid, valids are 'STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA'".format(raw_settings['s3-storage']))
 
 	settings['serv-folder'] = raw_settings['serv-folder'] if 'serv-folder' in raw_settings else ''
 	if set(("serv-url","serv-user","serv-pass","serv-folder")).issubset(raw_settings):

@@ -1,4 +1,4 @@
-from src.comparators import local_and_s3_files_are_equals
+from src.comparators import local_and_s3_equals
 from src.local.file import verify_and_create_local_folder_path
 from src.local.file import get_file_hash
 from src.mimes import get_file_extension
@@ -12,9 +12,10 @@ def print_path(settings, s3_key):
 
 def download_files(settings, s3_key):
 	print (" Downloading '{}' ".format(s3_key)),
+	full_local_path = "{}{}".format(settings['local'], s3_key)
 
 	# If file to download already exist and is the same, finish
-	if local_and_s3_files_are_equals(settings, s3_key):
+	if local_and_s3_equals(settings, full_local_path, s3_key):
 		print (" --untouched")
 		return
 
@@ -24,26 +25,26 @@ def download_files(settings, s3_key):
 		print (" --DRY-RUN")
 	else:
 		# local_path is where we will downlad the file in local
-		local_path = '{}{}'.format(settings['local'],s3_key)
-		verify_and_create_local_folder_path(local_path)
-		settings['s3_client'].download_file(settings['s3_bucket'], s3_key, local_path)
+		verify_and_create_local_folder_path(full_local_path)
+		settings['s3_client'].download_file(settings['s3_bucket'], s3_key, full_local_path)
 		# Now validate the downloaded file
-		if local_and_s3_files_are_equals(settings, s3_key):
+		if local_and_s3_equals(settings, full_local_path, s3_key):
 			print (" --OK!")
 		else:
 			print (" --ERROR")
 
 def upload_files(settings, local_rel_path):
 	full_local_path = "{}{}".format(settings["local"], local_rel_path)
+	s3_path = "{}{}".format(settings['s3-prefix'], local_rel_path)
 	file_extension = get_file_extension(local_rel_path)
-	print (" Uploading '{}' ".format(local_rel_path)),
+	print (" Uploading '{}' -> {} ".format(local_rel_path, s3_path)),
 
 	if forbidden_to_upload(full_local_path):
 		print ("--forbidden-to-upload")
 		return
 	
 	# If files are the same, then they are untouched
-	if local_and_s3_files_are_equals(settings, local_rel_path):
+	if local_and_s3_equals(settings, full_local_path, s3_path):
 		print ("--untouched --DONE")
 		return
 	
@@ -57,7 +58,8 @@ def upload_files(settings, local_rel_path):
 		result = settings['s3_client'].put_object(
 			Body=open(full_local_path, 'rb'),
 			Bucket=settings['s3_bucket'],
-			Key=local_rel_path,
+			Key=s3_path,
+			StorageClass="STANDARD_IA",
 			ContentType=get_content_type_per_extension(file_extension),
 			CacheControl=get_cache_control_per_extension(file_extension)
 		)
