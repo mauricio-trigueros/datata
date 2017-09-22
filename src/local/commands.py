@@ -5,9 +5,10 @@ from .file import get_file_hash
 from .file import get_file_size
 from .file import local_file_exist
 from .file import verify_and_create_local_folder_path
-from src.mimes import is_jpg, is_png
+from src.mimes import is_jpg, is_png, is_video
 import os
 import sys
+import tempfile
 
 def print_path(settings, local_rel_path):
 	full_path = "{}{}".format(settings['local'], local_rel_path)
@@ -72,6 +73,24 @@ def compress_images(settings, local_rel_path):
 	# Now we show the percentage of reduction
 	reduction = int ((float (get_file_size(compress_file)) / float (get_file_size(original_file))) * 100)
 	print ("--{}%".format(reduction))
+
+def verify_videos(settings, local_rel_path):
+	local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
+	full_path = "{}{}".format(settings['local'], local_rel_path_clean)
+
+	if is_video(local_rel_path):
+		print ("Verifying video '{}' ".format(full_path)),
+		# Create temporal file to keep the check result (we will remove it later)
+		temp_file, temp_file_path = tempfile.mkstemp()
+		command = "ffmpeg -v error -i '{}' -f null - 2>'{}'".format(full_path, temp_file_path)
+		# Execute command
+		result = os.system(command)
+		# Check file size
+		if (int(get_file_size(temp_file_path)) > 0):
+			print ("--video-PROBLEM")
+		else:
+			print ("--video-OK")
+		os.close(temp_file)
 
 
 

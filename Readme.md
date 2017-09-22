@@ -45,6 +45,7 @@ For example:
 
 - To use the command **mysql_full_backup**, you need to install *mysqldump* in your computer.
 - To use the command **compress_images**, you need to install *pngquant* and *jpegoptim*.
+- To use the command **verify_videos**, you need to install *ffmpeg*.
 
 ## List of commands to execute:
 To see all commands that you can execute, with an example and a small description, just run:

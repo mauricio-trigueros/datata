@@ -79,6 +79,13 @@ command['compress_images'] = {
 	'example': 'python datata.py --command="compress_images" --local="/Users/me/Deleteme/files/" --local-dest="/Users/me/Deleteme/parsed/" --strategy="skip-if-exist"',
 	'description': 'Compress pictures. If you want to overwrite, select overwrite strategy, otherwise skip-if-exist'
 }
+command['verify_videos'] = {
+	'command': 'local_commands.verify_videos',
+	'mandatory_values': ['local'],
+	'iterator': 'local_iterators.files',
+	'example': 'python datata.py --command="verify_videos" --local="/Users/me/Deleteme/VIDEOS/"',
+	'description': 'Verify (recursively) videos for a given folder. For each video found, it prints the video status.'
+}
 
 ##
 # S3 commands
