@@ -33,3 +33,6 @@ def validate_local_folder_or_die(local_path):
 		sys.exit("path {} do not exist".format(local_path))
 	else:
 		return local_path
+
+def get_files_size_diff(full_original_path, full_processed_path):
+	return int ((float (get_file_size(full_processed_path)) / float (get_file_size(full_original_path))) * 100)

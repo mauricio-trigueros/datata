@@ -16,6 +16,16 @@ def remote_item_is_file(server_client, remote_path):
 		# It is not a file or a folder!
 		raise "Remote file {} is not a folder or a file".format(remote_path)
 
+def download_server_file(settings, remote_full_path, local_full_path):
+	sftp = settings['server_client'].client.open_sftp()
+	sftp.get(remote_full_path, local_full_path)
+	sftp.close()
+
+def upload_server_file(settings, local_full_path, remote_full_path):
+	sftp = settings['server_client'].client.open_sftp()
+	sftp.put(local_full_path, remote_full_path)
+	sftp.close()
+
 class create_ssh_client_or_die:
 	client = None
 

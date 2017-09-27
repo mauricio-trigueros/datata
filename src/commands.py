@@ -40,6 +40,13 @@ command['server_download'] = {
 	'example': 'python datata.py --command="server_download" --serv-url="192.168.100.72" --serv-user="vagrant" --serv-pass="vagrant" --serv-key="/dev/null" --serv-folder="/var/www/wordpress/wp-content/themes/"  --local="/Users/me/folder/" --dry-run="False"',
 	'description': 'Download the files in remote server "serv-folder" to local folder "local" (if "dry-run" is False). It uses a ssh key "serv-key" or a server password "serv-pass" to connect to the server. If you want to use a password, then set "serv-key" to "/dev/null". If you want to use a SSH key, then set "serv-pass" to "".'
 }
+command['remote_compress_images'] = {
+	'command': 'server_commands.remote_compress_images',
+	'mandatory_values': ['serv-url','serv-user','serv-pass','serv-key','serv-folder','dry-run'],
+	'iterator': 'server_iterators.files',
+	'example': 'python datata.py --command="remote_compress_images" --serv-url="192.168.100.72" --serv-user="vagrant" --serv-pass="vagrant" --serv-key="/dev/null" --serv-folder="/var/www/wordpress/wp-content/themes/" --dry-run="False"',
+	'description': 'Compress remote images, it downloaded them, then compress them in local, and uplad them again.'
+}
 
 ##
 # Local commands

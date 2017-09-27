@@ -1,11 +1,15 @@
 import sys
 import getopt
+import tempfile
 
 from src.server.helpers import create_ssh_client_or_die
 from src.s3.helpers import create_s3_client_or_die
 from src.local.file import validate_local_folder_or_die
 
+from src.mimes import is_jpg, is_png, is_video
+
 from . import commands
+
 
 ALLOWED_PARAMETERS = [
 	"command",    # Name of the command we want to execute (from commands.py)
@@ -81,6 +85,10 @@ def parse_raw_settings(raw_settings):
 		)
 		settings['server_client'] = ssh_client
 
+	# Adding temporal folders
+	settings["temp_folder_1"] = tempfile.mkdtemp()
+	settings["temp_folder_2"] = tempfile.mkdtemp()
+
 	# Adding mysql parameters:
 	settings["mysql-user"] = raw_settings['mysql-user'] if "mysql-user" in raw_settings else False
 	settings["mysql-pass"] = raw_settings['mysql-pass'] if "mysql-pass" in raw_settings else False
@@ -136,3 +144,15 @@ def command_list_commands(settings):
 		print ("    {}".format(data.get('description', '(no description provided)')))
 		print ("    Mandatory values: {}".format(data['mandatory_values']))
 		print ("    Example: {}".format(data.get('example', '(no example provided)')))
+
+# Return the command to execute when compressing pictures.
+# Path parameters needs to be full paths.
+# If original_full_path is not a picture, then returns false.
+def get_image_comp_command(original_full_path, comp_full_path):
+	# Compressing file
+	if is_jpg(original_full_path):
+		return "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(original_full_path, comp_full_path)
+	elif is_png(original_full_path):
+		return "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(comp_full_path, original_full_path)
+	else:
+		return false
