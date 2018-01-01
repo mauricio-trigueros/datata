@@ -27,7 +27,9 @@ def local_file_exist(abs_path):
 def verify_and_create_local_folder_path(full_file_path):
 	dir_name = os.path.dirname(full_file_path)
 	if not os.path.isdir(dir_name):
+		print ("Creating missing folder '{}'".format(dir_name))
 		os.makedirs(dir_name)
+	return full_file_path
 
 def validate_local_folder_or_die(local_path):
 	if not os.path.exists(local_path):

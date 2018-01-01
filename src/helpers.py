@@ -4,7 +4,7 @@ import tempfile
 
 from src.server.helpers import create_ssh_client_or_die
 from src.s3.helpers import create_s3_client_or_die
-from src.local.file import validate_local_folder_or_die
+from src.local.file import validate_local_folder_or_die, verify_and_create_local_folder_path
 
 from src.mimes import is_jpg, is_png, is_video
 
@@ -52,10 +52,10 @@ def parse_raw_settings(raw_settings):
 		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
 
 	if "local" in raw_settings:
-		settings['local'] = validate_local_folder_or_die(raw_settings['local'])
+		settings['local'] = verify_and_create_local_folder_path(raw_settings['local'])
 
 	if "local-dest" in raw_settings:
-		settings['local-dest'] = validate_local_folder_or_die(raw_settings['local-dest'])
+		settings['local-dest'] = verify_and_create_local_folder_path(raw_settings['local-dest'])
 
 	if "hash-file" in raw_settings:
 		settings['hash-file'] = validate_local_folder_or_die(raw_settings['hash-file'])
