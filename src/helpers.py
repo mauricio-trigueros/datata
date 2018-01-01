@@ -20,6 +20,7 @@ ALLOWED_PARAMETERS = [
 	"local",      # Local full path, it needs to exist
 	"local-dest", # Locall full path for destination, it needs to exist
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run
+	"delete-after",     # Delete after
 	"hash-file",  # Path to the file containing hashes, like "/Users/me/Downloads/hash.txt"
 	"strategy",
 	"serv-url",   # Server IP, like "192.168.100.90"
@@ -50,6 +51,9 @@ def parse_raw_settings(raw_settings):
 	# Dry run is not mandatory (for example, to list a bucket content)
 	if "dry-run" in raw_settings:
 		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
+
+	if "delete-after" in raw_settings:
+		settings['delete-after'] = False if raw_settings['delete-after'].lower() in ("no", "false") else True
 
 	if "local" in raw_settings:
 		settings['local'] = verify_and_create_local_folder_path(raw_settings['local'])

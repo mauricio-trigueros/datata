@@ -86,6 +86,13 @@ command['compress_images'] = {
 	'example': 'python datata.py --command="compress_images" --local="/Users/me/Deleteme/files/" --local-dest="/Users/me/Deleteme/parsed/" --strategy="skip-if-exist"',
 	'description': 'Compress pictures. If you want to overwrite, select overwrite strategy, otherwise skip-if-exist'
 }
+command['tar_files'] = {
+	'command': 'local_commands.tar_files',
+	'mandatory_values': ['local', 'local-dest', 'strategy', 'delete-after'],
+	'iterator': 'local_iterators.files',
+	'example': 'python datata.py --command="tar_files" --local="/Users/me/Deleteme/files/" --local-dest="/Users/me/Deleteme/parsed/" --strategy="skip-if-exist"',
+	'description': 'Compress files. If you want to overwrite, select overwrite strategy, otherwise skip-if-exist'
+}
 command['verify_videos'] = {
 	'command': 'local_commands.verify_videos',
 	'mandatory_values': ['local'],
