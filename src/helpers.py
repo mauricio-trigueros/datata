@@ -155,4 +155,4 @@ def get_image_comp_command(original_full_path, comp_full_path):
 	elif is_png(original_full_path):
 		return "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(comp_full_path, original_full_path)
 	else:
-		return false
+		return False

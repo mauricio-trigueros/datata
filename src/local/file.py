@@ -1,6 +1,7 @@
 import os
 import hashlib
 import subprocess
+import sys
 
 def get_folder_size(abs_path):
 	res =  subprocess.check_output("du -k -s '"+abs_path+"' | awk '{print $1}'", shell=True)

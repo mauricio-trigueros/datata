@@ -79,10 +79,6 @@ def remote_compress_images(settings, relative_path):
 		command = get_image_comp_command(temp_file, comp_file)
 		if (command):
 			os.system(command)
-		else:
-			# Redundant, we already know it is a picture
-			print ("--not-image")
-			return
 
 		if (local_file_exist(comp_file)) and (int(local_get_file_size(comp_file)) > 0) :
 			print ("--compressed"),

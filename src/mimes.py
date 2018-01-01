@@ -39,6 +39,7 @@ def get_content_type_per_extension(file_extension):
 	elif file_extension in ['svg']:                   return "image/svg+xml"
 	else: return "binary/octet-stream"
 
+# Particular file type checkers
 def is_png(file_path):
 	extension = get_file_extension(file_path).lower()
 	if extension in ['png']:  return True
@@ -47,6 +48,12 @@ def is_png(file_path):
 def is_jpg(file_path):
 	extension = get_file_extension(file_path).lower()
 	if extension in ['jpeg','jpg','jpe']:  return True
+	else: return False
+
+# General file type checkers
+def is_image(file_path):
+	if is_png(file_path) or is_jpg(file_path):
+		return True
 	else: return False
 
 def is_video(file_path):

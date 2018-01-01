@@ -5,7 +5,9 @@ from .file import get_file_hash
 from .file import get_file_size
 from .file import local_file_exist
 from .file import verify_and_create_local_folder_path
+from .file import get_files_size_diff
 from src.mimes import is_jpg, is_png, is_video
+from src.helpers import get_image_comp_command
 import os
 import sys
 import tempfile
@@ -26,6 +28,7 @@ def files_info(settings, local_rel_path):
 	file_size = get_file_size(full_path)
 	print (" FILE '{}'   {} hash {} Kbytes ".format(full_path, file_hash, file_size))
 
+# To use this command we need to use "images" iterator, we we are sure that local_rel_path is a picture.
 def compress_images(settings, local_rel_path):
 	local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
 	print ("Compressing '{}' ".format(local_rel_path_clean)),
@@ -37,13 +40,8 @@ def compress_images(settings, local_rel_path):
 	verify_and_create_local_folder_path(compress_file)
 
 	# Get the command to execute, if JPG or PNG, or return if no picture
-	if is_jpg(local_rel_path):
-		print ("--jpg"),
-		command = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(original_file, compress_file)
-	elif is_png(local_rel_path):
-		print ("--png"),
-		command = "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(compress_file, original_file)
-	else:
+	command = get_image_comp_command(original_file, compress_file)
+	if not command:
 		print ("--not-image")
 		return
 
@@ -71,8 +69,8 @@ def compress_images(settings, local_rel_path):
 		os.system("cp {} {}".format(original_file, compress_file))
 		return
 	# Now we show the percentage of reduction
-	reduction = int ((float (get_file_size(compress_file)) / float (get_file_size(original_file))) * 100)
-	print ("--{}%".format(reduction))
+	reduction = get_files_size_diff(original_file, compress_file)
+	print ("--reduction {}%".format(reduction))
 
 def verify_videos(settings, local_rel_path):
 	local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
