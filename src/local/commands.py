@@ -11,6 +11,7 @@ from src.helpers import get_image_comp_command
 import os
 import sys
 import tempfile
+from .helpers import execute_command_according_strategy
 
 def print_path(settings, local_rel_path):
 	full_path = "{}{}".format(settings['local'], local_rel_path)
@@ -41,36 +42,7 @@ def compress_images(settings, local_rel_path):
 
 	# Get the command to execute, if JPG or PNG, or return if no picture
 	command = get_image_comp_command(original_file, compress_file)
-	if not command:
-		print ("--not-image")
-		return
-
-	# Execute previous instructions, depending on strategy
-	if settings['strategy'] == 'overwrite':
-		# We need to remove destination file
-		if os.path.isfile(compress_file):
-			os.remove(compress_file),
-			print ("--prev-compressed-removed"),
-	elif settings['strategy'] == 'skip-if-exist':
-		# If file exist, finish
-		if os.path.isfile(compress_file):
-			print ("--file-exist")
-			return
-	else:
-		sys.exit("Strategy  '{}' not found".format(settings['strategy']))
-
-	# Execute command
-	os.system(command)
-
-	if (local_file_exist(compress_file)) and (int(get_file_size(compress_file)) > 0) :
-		print ("--compressed"),
-	else:
-		print ("--original-file")
-		os.system("cp {} {}".format(original_file, compress_file))
-		return
-	# Now we show the percentage of reduction
-	reduction = get_files_size_diff(original_file, compress_file)
-	print ("--reduction {}%".format(reduction))
+	execute_command_according_strategy(command, settings, compress_file, original_file)
 
 def tar_files(settings, local_rel_path):
 	local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
@@ -82,34 +54,10 @@ def tar_files(settings, local_rel_path):
 		return
 
 	original_file = "{}{}".format(settings['local'], local_rel_path_clean)
-	compress_file = "{}{}".format(settings['local'], "{}.tar.bz2".format(local_rel_path_clean))
-	# Execute previous instructions, depending on strategy
-	if settings['strategy'] == 'overwrite':
-		# We need to remove destination file
-		if os.path.isfile(compress_file):
-			os.remove(compress_file),
-			print ("--prev-compressed-removed"),
-	elif settings['strategy'] == 'skip-if-exist':
-		# If file exist, finish
-		if os.path.isfile(compress_file):
-			print ("--compressed-file-exist")
-			return
-	command = "tar -cpzf '{}' -C / '{}' ".format(compress_file, original_file[1:])
-	# Execute command
-	os.system(command)
-	if (local_file_exist(compress_file)) and (int(get_file_size(compress_file)) > 0) :
-		print ("--compressed"),
-	else:
-		print ("--original-file")
-		os.system("cp {} {}".format(original_file, compress_file))
-		return
-	# Now we show the percentage of reduction
-	reduction = get_files_size_diff(original_file, compress_file)
-	print ("--reduction {}%".format(reduction))
+	compress_file = "{}{}".format(settings['local-dest'], "{}.tar.bz2".format(local_rel_path_clean))
 
-	if settings['delete-after']:
-		print ("--deleting-original")
-		os.remove(original_file)
+	command = "tar -cpzf '{}' -C / '{}' ".format(compress_file, original_file[1:])
+	execute_command_according_strategy(command, settings, compress_file, original_file)
 
 def verify_videos(settings, local_rel_path):
 	local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
