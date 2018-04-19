@@ -5,6 +5,7 @@ from .file import get_file_hash
 from src.comparators import local_and_server_files_are_equals
 from src.local.file import verify_and_create_local_folder_path, local_file_exist, get_files_size_diff
 from src.local.file import get_file_size as local_get_file_size
+from src.local.file import get_file_hash as get_local_file_hash
 from src.server.helpers import download_server_file, upload_server_file
 from src.mimes import is_jpg, is_png, is_video
 from src.helpers import get_image_comp_command
@@ -32,29 +33,28 @@ def print_path(settings, server_rel_path):
 	full_path = "{}{}".format(settings['serv-folder'], server_rel_path)
 	print ("        '{}'   ".format(full_path))
 
-def download_files(settings, relative_path):
-	print ("Downloading {}".format(relative_path)),
-	print (" --downloading"),
-	full_local_path = "{}{}".format(settings['local'],relative_path)
-	full_remote_path = "{}{}".format(settings['serv-folder'],relative_path)
+def download_files(settings, parameters):
+	print ("Downloading {}".format(parameters['file_relative_path'])),
 
-	# Check if files are the same!!
-	if local_and_server_files_are_equals(settings, full_local_path, full_remote_path):
+	# If files are the same, skip
+	if parameters['server_file_md5'] == parameters['local_file_md5']:
 		print ("--untouched --DONE")
 		return
 
-	print (" --downloading..."),
+	if not parameters['local_file_md5']:
+		print ("--local-missing"),
+
 	# If we are in dry mode, do nothing
+	print (" --downloading..."),
 	if settings['dry-run']:
 		print (" --DRY-RUN")
 	else:
-		verify_and_create_local_folder_path(full_local_path)
-		download_server_file(settings, full_remote_path, full_local_path)
-		# sftp = settings['server_client'].client.open_sftp()
-		# sftp.get(full_remote_path,full_local_path)
-		# sftp.close()
-		print (" --done")
-		# Verify downloaded file!!
+		verify_and_create_local_folder_path(parameters['full_local_path'])
+		download_server_file(settings, parameters['full_server_path'], parameters['full_local_path'])
+		if parameters['server_file_md5'] == get_local_file_hash(parameters['full_local_path']):
+			print (" --verified --DONE")
+		else:
+			print (" --ERROR --DONE")
 
 # To make it work
 # sudo usermod -a -G www-data $USER

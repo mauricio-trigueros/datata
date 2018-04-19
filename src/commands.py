@@ -36,7 +36,7 @@ command['server_files_info'] = {
 command['server_download'] = {
 	'command': 'server_commands.download_files',
 	'mandatory_values': ['serv-url','serv-user','serv-pass','serv-key','serv-folder', 'local','dry-run'],
-	'iterator': 'server_iterators.files',
+	'iterator': 'server_iterators.fast_files',
 	'example': 'python datata.py --command="server_download" --serv-url="192.168.100.72" --serv-user="vagrant" --serv-pass="vagrant" --serv-key="/dev/null" --serv-folder="/var/www/wordpress/wp-content/themes/"  --local="/Users/me/folder/" --dry-run="False"',
 	'description': 'Download the files in remote server "serv-folder" to local folder "local" (if "dry-run" is False). It uses a ssh key "serv-key" or a server password "serv-pass" to connect to the server. If you want to use a password, then set "serv-key" to "/dev/null". If you want to use a SSH key, then set "serv-pass" to "".'
 }

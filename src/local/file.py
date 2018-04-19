@@ -15,7 +15,10 @@ def count_files_in_folder(abs_path):
 	items = len([name for name in os.listdir(abs_path) if os.path.isfile(os.path.join(abs_path, name))])
 	return items
 
+# If file do not exist, return ''
 def get_file_hash(abs_path):
+	if not local_file_exist(abs_path):
+		return ''
 	return hashlib.md5(open(abs_path,'rb').read()).hexdigest()
 
 def local_file_exist(abs_path):

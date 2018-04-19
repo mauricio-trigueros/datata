@@ -33,7 +33,7 @@ pip install -r requirements.txt
 
 5. And now you are able to run the commands, for example lets list the content of our current directory:
 ```
-python datata.py --command="list_local_folder" --local="."
+python datata.py --command="local_list_files" --local="."
 ```
 
 Now you are able to run any other command.
