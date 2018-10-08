@@ -6,15 +6,15 @@ def execute_command_according_strategy(command, settings, destination_file, orig
         print ("--no-command")
         return
 
-    print ("--compressing"),
+    print ("--compressing", end=' ')
 
     # Execute previous instructions, depending on strategy
     if settings['strategy'] == 'overwrite':
-        print ("--overwritting"),
+        print ("--overwritting", end=' ')
         # We need to remove destination file first
         if os.path.isfile(destination_file):
             os.remove(destination_file),
-            print ("--prev-file-removed"),
+            print ("--prev-file-removed", end=' ')
     elif settings['strategy'] == 'skip-if-exist':
         # If file exist, do nothing
         if os.path.isfile(destination_file):
@@ -29,7 +29,7 @@ def execute_command_according_strategy(command, settings, destination_file, orig
     # Now we need to check if the file has been generated, if we have a valid output
     # otherwise we will need to copy the file manually
     if (local_file_exist(destination_file)) and (int(get_file_size(destination_file)) > 0) :
-        print ("--executed"),
+        print ("--executed", end=' ')
     else:
         print ("--copying-original-file")
         os.system("cp {} {}".format(original_file, destination_file))

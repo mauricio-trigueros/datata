@@ -21,18 +21,18 @@ def fast_iterator_over_files(settings, rootPath, relativePath, functionCallback)
     for index, item in enumerate(folderContent):
         parts = item.split()
         # Path looks like "./antecesores.png", we need to remove first "./"
-        file_relative_path = parts[1][2:].rstrip().encode('utf-8')
+        file_relative_path = parts[1][2:].rstrip()
         parameters = {
-            "server_file_md5": parts[0].rstrip().encode('utf-8'),
+            "server_file_md5": parts[0].rstrip(),
             "file_relative_path": file_relative_path,
             "full_server_path": "{}{}".format(settings['serv-folder'], file_relative_path)
         }
         if 'local' in settings:
-            parameters["full_local_path"] = "{}{}".format(settings['local'], file_relative_path)
+            parameters["full_local_path"] = settings['local'] + file_relative_path
             parameters["local_file_md5"] = get_local_file_hash(parameters["full_local_path"])
         try:
             functionCallback(settings, parameters)
-        except Exception, e:
+        except Exception as e:
             print ("\n------>ERROR with remote file '{}':".format(parameters))
             print (str(e))
 
@@ -47,7 +47,7 @@ def iterate_over_files(settings, rootPath, relativePath, functionCallback):
         if remote_item_is_file(settings['server_client'], item_path):
             try:
                 functionCallback(settings, "{}{}".format(relativePath, item))
-            except Exception, e:
+            except Exception as e:
                 print ("\n------>ERROR with remote file '{}':".format(item_path))
                 print (str(e))
         else:

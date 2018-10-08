@@ -56,7 +56,13 @@ def parse_raw_settings(raw_settings):
         settings['delete-after'] = False if raw_settings['delete-after'].lower() in ("no", "false") else True
 
     if "local" in raw_settings:
-        settings['local'] = verify_and_create_local_folder_path(raw_settings['local'])
+        # local will depend on kind of command to run:
+        # If we run a "list" command we should not create anything
+        if 'list' in settings['command']['command']:
+            # List command, do not create anything!
+            settings['local'] = validate_local_folder_or_die(raw_settings['local'])
+        else:
+            settings['local'] = verify_and_create_local_folder_path(raw_settings['local'])
 
     if "local-dest" in raw_settings:
         settings['local-dest'] = verify_and_create_local_folder_path(raw_settings['local-dest'])

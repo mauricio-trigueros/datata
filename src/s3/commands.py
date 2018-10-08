@@ -11,7 +11,7 @@ def print_path(settings, s3_key):
     print ("        '{}'   ".format(s3_key))
 
 def download_files(settings, s3_key):
-    print (" Downloading '{}' ".format(s3_key)),
+    print (" Downloading '{}' ".format(s3_key), end='')
     full_local_path = "{}{}".format(settings['local'], s3_key)
 
     # If file to download already exist and is the same, finish
@@ -19,7 +19,7 @@ def download_files(settings, s3_key):
         print (" --untouched")
         return
 
-    print (" --downloading..."),
+    print (" --downloading...", end='')
     # If we are in dry mode, do nothing
     if settings['dry-run']:
         print (" --DRY-RUN")
@@ -37,7 +37,7 @@ def upload_files(settings, local_rel_path):
     full_local_path = "{}{}".format(settings["local"], local_rel_path)
     s3_path = "{}{}".format(settings['s3-prefix'], local_rel_path)
     file_extension = get_file_extension(local_rel_path)
-    print (" Uploading '{}' -> {} ".format(local_rel_path, s3_path)),
+    print (" Uploading '{}' -> {} ".format(local_rel_path, s3_path), end='')
 
     if forbidden_to_upload(full_local_path):
         print ("--forbidden-to-upload")
@@ -49,7 +49,7 @@ def upload_files(settings, local_rel_path):
         return
     
     # If files are differnt, we need to upload it again
-    print ("--uploading...."),
+    print ("--uploading....", end='')
 
     # If we are in dry-run, then do not run anything
     if settings['dry-run']:
@@ -80,7 +80,7 @@ def set_cache_control(settings, s3_key):
     cache_control  = get_cache_control_per_extension(file_extension)
     # If the file extension is not recognized, then cache_control is false, we can not add cache to a file type that 
     # we do not know (it does not match any file known file extension)
-    print ("        '{}'   ".format(s3_key, file_extension)),
+    print ("        '{}'   ".format(s3_key, file_extension), end='')
     
     # If Cache control is the same, then do not touch anything
     s3_object = settings['s3_client'].get_object(Bucket=settings["s3_bucket"], Key=s3_key)
@@ -88,7 +88,7 @@ def set_cache_control(settings, s3_key):
         print (" --same-cache-control")
         return
 
-    print (" --adding-cache-control..."),
+    print (" --adding-cache-control...", end='')
 
     # If we are in dry-run, then do not run anything
     if settings['dry-run']:
@@ -115,7 +115,7 @@ def set_mime_type(settings, s3_key):
     file_extension = get_file_extension(s3_key)
     mime_guessed   = get_content_type_per_extension(file_extension)
 
-    print (" Adding mime to '{}' ".format(s3_key)),
+    print (" Adding mime to '{}' ".format(s3_key), end='')
 
     # If we do not recognize the extension (can be missing, wrong, or not set in this app), we can not set the mime_type
     if mime_guessed == "binary/octet-stream":
@@ -129,9 +129,9 @@ def set_mime_type(settings, s3_key):
 
     # If remote file has a mime type different than default one ('binary/octet-stream'), do not touch it, probably is valid
     if s3_object['ContentType'] != 'binary/octet-stream':
-        print ("--valid-remote-mime"),
+        print ("--valid-remote-mime", end='')
 
-    print ("--setting-mime..."),
+    print ("--setting-mime...", end='')
 
     # If we are in dry mode, do nothing
     if settings['dry-run']:

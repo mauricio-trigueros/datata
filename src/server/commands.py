@@ -34,7 +34,7 @@ def print_path(settings, server_rel_path):
     print ("        '{}'   ".format(full_path))
 
 def download_files(settings, parameters):
-    print ("Downloading {}".format(parameters['file_relative_path'])),
+    print ("Downloading {}".format(parameters['file_relative_path']), end='')
 
     # If files are the same, skip
     if parameters['server_file_md5'] == parameters['local_file_md5']:
@@ -42,10 +42,10 @@ def download_files(settings, parameters):
         return
 
     if not parameters['local_file_md5']:
-        print ("--local-missing"),
+        print ("--local-missing", end='')
 
     # If we are in dry mode, do nothing
-    print (" --downloading..."),
+    print (" --downloading...", end='')
     if settings['dry-run']:
         print (" --DRY-RUN")
     else:
@@ -61,7 +61,7 @@ def download_files(settings, parameters):
 def remote_compress_images(settings, relative_path):
     full_remote_path = "{}{}".format(settings['serv-folder'],relative_path)
     if is_png(full_remote_path) or is_jpg(full_remote_path):
-        print ("File {}".format(relative_path)),
+        print ("File {}".format(relative_path), end='')
 
         original_folder = settings["temp_folder_1"]
         comp_folder = settings["temp_folder_2"]
@@ -81,7 +81,7 @@ def remote_compress_images(settings, relative_path):
             os.system(command)
 
         if (local_file_exist(comp_file)) and (int(local_get_file_size(comp_file)) > 0) :
-            print ("--compressed"),
+            print ("--compressed", end='')
         else:
             print ("--original-file")
             os.system("cp {} {}".format(temp_file, comp_file))
@@ -89,7 +89,7 @@ def remote_compress_images(settings, relative_path):
 
         # Now we show the percentage of reduction
         reduction = get_files_size_diff(temp_file, comp_file)
-        print ("--reduction {}%".format(reduction)),
+        print ("--reduction {}%".format(reduction), end='')
 
         if (reduction == 100):
             print ("--no-shrink")

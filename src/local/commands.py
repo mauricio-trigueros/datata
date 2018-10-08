@@ -14,7 +14,7 @@ import tempfile
 from .helpers import execute_command_according_strategy
 
 def print_path(settings, local_rel_path):
-    full_path = "{}{}".format(settings['local'], local_rel_path)
+    full_path = "{}/{}".format(settings['local'], local_rel_path)
     print ("        '{}'   ".format(full_path))
 
 def folders_info(settings, local_rel_path):
@@ -31,8 +31,8 @@ def files_info(settings, local_rel_path):
 
 # To use this command we need to use "images" iterator, we we are sure that local_rel_path is a picture.
 def compress_images(settings, local_rel_path):
-    local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
-    print ("Compressing '{}' ".format(local_rel_path_clean)),
+    local_rel_path_clean = local_rel_path
+    print ("Compressing '{}' ".format(local_rel_path_clean), end='')
 
     original_file = "{}{}".format(settings['local'], local_rel_path_clean)
     compress_file = "{}{}".format(settings['local-dest'], local_rel_path_clean)
@@ -45,9 +45,9 @@ def compress_images(settings, local_rel_path):
     execute_command_according_strategy(command, settings, compress_file, original_file)
 
 def tar_files(settings, local_rel_path):
-    local_rel_path_clean = local_rel_path.decode('utf-8').encode('utf-8')
+    local_rel_path_clean = local_rel_path
     extension = get_file_extension(local_rel_path_clean)
-    print ("Compressing '{}' with extension '{}' ".format(local_rel_path_clean, extension)),
+    print ("Compressing '{}' with extension '{}' ".format(local_rel_path_clean, extension), end='')
     # If file is already compressed (or has no extension) skip it
     if extension in ['bz2', 'zip', '']:
         print ('--file-already-compressed --DONE')
@@ -64,7 +64,7 @@ def verify_videos(settings, local_rel_path):
     full_path = "{}{}".format(settings['local'], local_rel_path_clean)
 
     if is_video(local_rel_path):
-        print ("Verifying video '{}' ".format(full_path)),
+        print ("Verifying video '{}' ".format(full_path), end='')
         # Create temporal file to keep the check result (we will remove it later)
         temp_file, temp_file_path = tempfile.mkstemp()
         command = "ffmpeg -v error -i '{}' -f null - 2>'{}'".format(full_path, temp_file_path)

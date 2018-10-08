@@ -11,14 +11,16 @@ python datata.py --command="list_local_folder" --local="."
 
 ## Installing Datata
 
+0. You will need pyenv to match the Python version specified in *.python-version*, and *virtualenv*
+```
+eval "$(pyenv init -)”
+```
+
 1. You need *virtualenv* installed in your computer. 
-```
-pip install virtualenv
-```
 
 2. Then create a Python virtual enviroment.
 ```
-virtualenv venv
+python -m venv venv
 ```
 
 3. Load the virtualenvironment that you just created.
@@ -28,7 +30,8 @@ source venv/bin/activate
 
 4. And populate it with the requirements file.
 ```
-pip install -r requirements.txt
+pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 5. And now you are able to run the commands, for example lets list the content of our current directory:
@@ -55,7 +58,7 @@ python datata.py --command="list_commands"
 
 The result will be something like:
 ```
-  Command: set_s3_cache_control
+  Command: s3_set_cache_control
     Set the Cache-Control header, for "bucket" (with "prefix"). Cache-Control is set in "helpers_files.py", method "get_cache_control_per_extension". If "dry-run" is True, files will not be affected, just listed.
     Mandatory values: ['secret', 'key', 'bucket', 'dry-run']
     Example: python datata.py --command="set_s3_cache_control" --key="AK..." --secret="07..." --bucket="mybucketname" --prefix="assets/images/" --dry-run="True"

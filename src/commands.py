@@ -171,7 +171,7 @@ def get_command_or_die(command_name):
 
 def validate_command_values_or_die(command_object, raw_settings):
     for field in raw_settings['command']['mandatory_values']:
-        print ("Validating field '{}'... ".format(field)),
+        print ("Validating field '{}'... ".format(field), end='')
         if field in raw_settings:
             print ("present!")
         else:
