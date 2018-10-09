@@ -60,3 +60,8 @@ def is_video(file_path):
     extension = get_file_extension(file_path).lower()
     if extension in ['mp4', 'avi', 'mov', 'divx', 'flv']:  return True
     else: return False
+
+def is_zip(file_path):
+    extension = get_file_extension(file_path)
+    if extension in ['gz']:  return True
+    else: return False

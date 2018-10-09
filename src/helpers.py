@@ -58,7 +58,7 @@ def parse_raw_settings(raw_settings):
     if "local" in raw_settings:
         # local will depend on kind of command to run:
         # If we run a "list" command we should not create anything
-        if 'list' in settings['command']['command']:
+        if settings['command']['command'] in ['list', 'local_commands.print_path'] :
             # List command, do not create anything!
             settings['local'] = validate_local_folder_or_die(raw_settings['local'])
         else:

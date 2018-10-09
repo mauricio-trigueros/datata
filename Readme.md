@@ -13,7 +13,7 @@ python datata.py --command="list_local_folder" --local="."
 
 0. You will need pyenv to match the Python version specified in *.python-version*, and *virtualenv*
 ```
-eval "$(pyenv init -)”
+eval "$(pyenv init -)"
 ```
 
 1. You need *virtualenv* installed in your computer. 

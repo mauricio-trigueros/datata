@@ -2,6 +2,9 @@ import os
 import hashlib
 import subprocess
 import sys
+import tempfile
+import gzip
+import shutil
 
 def get_folder_size(abs_path):
     res =  subprocess.check_output("du -k -s '"+abs_path+"' | awk '{print $1}'", shell=True)
@@ -38,7 +41,20 @@ def validate_local_folder_or_die(local_path):
     if not os.path.exists(local_path):
         sys.exit("path {} do not exist".format(local_path))
     else:
-        return local_path.decode('utf-8')
+        return local_path
 
 def get_files_size_diff(full_original_path, full_processed_path):
     return int ((float (get_file_size(full_processed_path)) / float (get_file_size(full_original_path))) * 100)
+
+def get_temp_file(extension=None):
+    if(extension): return tempfile.NamedTemporaryFile(suffix=".{}".format(extension), delete=False)
+    else: return tempfile.NamedTemporaryFile(delete=False)
+
+# Apply only to zip files containing single file, like patata.csv.gz
+# Return tempfile
+def unzip_file_to_temp(full_file_path):
+    unzipped = get_temp_file()
+    with gzip.open(full_file_path, 'rb') as f_in:
+        with open(unzipped.name, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    return unzipped

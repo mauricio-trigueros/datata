@@ -1,11 +1,15 @@
+import tempfile
 from src.comparators import local_and_s3_equals
 from src.local.file import verify_and_create_local_folder_path
 from src.local.file import get_file_hash
+from src.local.file import get_temp_file
+from src.local.file import unzip_file_to_temp
 from src.mimes import get_file_extension
 from src.mimes import get_content_type_per_extension
 from src.mimes import get_file_extension
 from src.mimes import get_cache_control_per_extension
 from src.mimes import forbidden_to_upload
+from src.mimes import is_zip
 
 def print_path(settings, s3_key):
     print ("        '{}'   ".format(s3_key))
@@ -146,3 +150,37 @@ def set_mime_type(settings, s3_key):
             MetadataDirective='REPLACE'
         )
         print (" --http-status={}".format(result['ResponseMetadata']['HTTPStatusCode']))
+
+# For example, we wanth the last objects for folder:
+# mybucketname/myfolder/myfolder.csv/data/inventory_papapapa.csv.gz
+# Then folder is "mybucketname/myfolder/myfolder.csv/data/" and prefix is "inventory_"
+def get_s3_latest_object(settings, folder, prefix):
+    # print("PRINT")
+    # print("{}/inventory_".format(folder))
+    # print("mydemotestbucket2/mytestinventory.csv/data/inventory_")
+    resp = settings['s3_client'].list_objects_v2(
+        Bucket=settings['s3_bucket'],
+        MaxKeys=100,
+        StartAfter="{}/{}".format(settings['s3_bucket'],folder),
+        Prefix="{}/{}".format(folder, prefix),
+    )
+    print(resp)
+    last = (sorted(resp['Contents'], key=lambda obj: obj['LastModified'], reverse=True))[0]
+    return last
+
+# Returns a zip
+def get_unzipped_s3_file(settings, key):
+    print("Downloading file {} ".format(key))
+    extension = get_file_extension(key)
+    temp_download = get_temp_file(extension)
+    print(extension)
+    print(temp_download)
+    # Download file
+    settings['s3_client'].download_file(settings['s3_bucket'], key, temp_download.name)
+    # Check if is zip file
+    if(is_zip(temp_download.name)):
+        print("File is zip!")
+        unzip = unzip_file_to_temp(temp_download.name)
+        print("Unzipped to {}".format(unzip.name))
+        return unzip
+    return None

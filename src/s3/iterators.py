@@ -1,3 +1,4 @@
+from .helpers import get_bucket_inventory
 
 # This function itereates the bucket_name passed as parameter, with the bucke_prefix.
 # It needs as parameter an s3_client, that holds the credentials.
@@ -17,3 +18,12 @@ def iterator(settings, function_callback):
 
             # Now execute the callback
             function_callback(settings, file['Key'])
+
+def iterator_inventory(settings, function_callback):
+    print ("Iterating with inventory")
+    inventory = get_bucket_inventory(settings)
+    print (inventory)
+    for item in inventory:
+        print ("File {} with size {} and md5 {}".format(item['file'], item['size'], item['md5']))
+    return
+
