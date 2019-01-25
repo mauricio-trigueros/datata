@@ -22,8 +22,8 @@ def iterator(settings, function_callback):
 def iterator_inventory(settings, function_callback):
     print ("Iterating with inventory")
     inventory = get_bucket_inventory(settings)
-    print (inventory)
+    print ("Got inventory, starting loop")
     for item in inventory:
-        print ("File {} with size {} and md5 {}".format(item['file'], item['size'], item['md5']))
+        print ("{} | {} bytes | {} | {} ".format(item['file'], item['size'], item['md5'], item['storage']))
     return
 

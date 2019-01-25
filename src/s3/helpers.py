@@ -21,9 +21,9 @@ def create_s3_client_or_die(key, bucket, secret):
 
 # Returns a list with all the bucket stuff
 def get_bucket_inventory(settings):
-    inventory_folder = "mydemotestbucket2/mytestinventory.csv/data"
+    inventory_folder = "{}/inventory/data".format(settings['s3_bucket'])
     # First get last inventory s3-object
-    inventory_s3_object = get_s3_latest_object(settings, inventory_folder, 'inventory_')
+    inventory_s3_object = get_s3_latest_object(settings, inventory_folder, '')
     print("Last inventory is {} from {}".format(inventory_s3_object['Key'], inventory_s3_object['LastModified']))
     # Download it and unzip it if need it
     file = get_unzipped_s3_file(settings, inventory_s3_object['Key'])
@@ -35,5 +35,6 @@ def get_bucket_inventory(settings):
         row['file'] = csv_row[1].strip('\"')
         row['size'] = csv_row[2].strip('\"')
         row['md5'] = csv_row[4].strip('\"')
+        row['storage'] = csv_row[5].replace('"', '').rstrip("\n\r")
         inventory.append(row)
     return inventory

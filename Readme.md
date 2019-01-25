@@ -6,7 +6,7 @@ It is written in Python, and tested in Mac OS Sierra.
 
 It is designed to execute commands in one single line. For example, to list the current directory, the command look like:
 ```
-python datata.py --command="list_local_folder" --local="."
+python3 datata.py --command="local_list_files" --local="."
 ```
 
 ## Installing Datata

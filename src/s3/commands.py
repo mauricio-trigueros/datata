@@ -164,7 +164,6 @@ def get_s3_latest_object(settings, folder, prefix):
         StartAfter="{}/{}".format(settings['s3_bucket'],folder),
         Prefix="{}/{}".format(folder, prefix),
     )
-    print(resp)
     last = (sorted(resp['Contents'], key=lambda obj: obj['LastModified'], reverse=True))[0]
     return last
 

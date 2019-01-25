@@ -111,6 +111,13 @@ command['s3_list_files'] = {
     'example': 'python datata.py --command="s3_list_files" --key="AK..." --secret="07..." --bucket="mybucketname" --prefix="assets/images/"',
     'description': 'List the content of the "bucket", starting from the "prefix".'
 }
+command['s3_list_inventory_files'] = {
+    'command': 's3_commands.print_path',
+    'mandatory_values': ['secret','key','bucket'],
+    'iterator': 's3_iterators.iterator_inventory',
+    'example': 'python datata.py --command="s3_list_inventory_files" --key="AK..." --secret="07..." --bucket="mybucketname" --prefix="assets/images/"',
+    'description': 'List the content of the "bucket", starting from the "prefix".'
+}
 command['s3_download'] = {
     'command': 's3_commands.download_files',
     'mandatory_values': ['secret','key','bucket','local','dry-run'],
