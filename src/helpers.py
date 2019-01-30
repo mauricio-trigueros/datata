@@ -8,6 +8,8 @@ from src.local.file import validate_local_folder_or_die, verify_and_create_local
 
 from src.mimes import is_jpg, is_png, is_video
 
+from src.s3.helpers import get_bucket_inventory
+
 from . import commands
 
 
@@ -105,6 +107,10 @@ def parse_raw_settings(raw_settings):
     settings["mysql-host"] = raw_settings['mysql-host'] if "mysql-host" in raw_settings else False
     settings["mysql-port"] = raw_settings['mysql-port'] if "mysql-port" in raw_settings else False
     settings["mysql-db"] = raw_settings['mysql-db'] if "mysql-db" in raw_settings else False
+
+    if settings['command']['s3_inventory']:
+        print ("Getting S3 inventory....")
+        settings['s3_inventory'] = get_bucket_inventory(settings)
 
     return settings
 

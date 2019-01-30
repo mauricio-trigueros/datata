@@ -125,8 +125,16 @@ command['s3_download'] = {
     'example': 'python datata.py --command="s3_download" --key="AK..." --secret="07..." --bucket="mybucketname" --local="/Users/me/folder" --prefix="assets/images/" --dry-run="True"',
     'description': 'Download the "bucket" content (from "prefix") to "local" path, if "dry-run" is False. Otherwise just list the files that are going to be downloaded.'
 }
+command['s3_inventory_upload'] = {
+    'command': 's3_commands.upload_files_with_inventory',
+    'mandatory_values': ['secret','key','bucket','local','s3-prefix','s3-storage','dry-run'],
+    'iterator': 'local_iterators.files',
+    'example': 'python datata.py --command="s3_upload" --key="AK..." --secret="07..." --bucket="mybucketname" --local="/Users/me/folder" --prefix="assets/images/" --s3-prefix="" --s3-storage="STANDARD" --dry-run="True"',
+    'description': 'Upload "prefix" folder inside "local" folder, to "bucket", with the same "prefix"; if "dry-run" is False. Otherwise just list the files that are going to be uploaded.',
+    's3_inventory': True,
+}
 command['s3_upload'] = {
-    'command': 's3_commands.upload_files',
+    'command': 's3_commands.upload_files_with_head',
     'mandatory_values': ['secret','key','bucket','local','s3-prefix','s3-storage','dry-run'],
     'iterator': 'local_iterators.files',
     'example': 'python datata.py --command="s3_upload" --key="AK..." --secret="07..." --bucket="mybucketname" --local="/Users/me/folder" --prefix="assets/images/" --s3-prefix="" --s3-storage="STANDARD" --dry-run="True"',

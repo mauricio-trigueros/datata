@@ -37,7 +37,35 @@ def download_files(settings, s3_key):
         else:
             print (" --ERROR")
 
-def upload_files(settings, local_rel_path):
+# Upload a file, but first checks against inventory if the file already exists,
+# and if has the same MD5, to avoid unnecesary re-uploads.
+def upload_files_with_inventory(settings, local_rel_path):
+    full_local_path = "{}{}".format(settings["local"], local_rel_path)
+    s3_path = "{}{}".format(settings['s3-prefix'], local_rel_path)
+    print("Uploading... {}".format(local_rel_path), end=' ')
+
+    if forbidden_to_upload(full_local_path):
+        print ("--forbidden-to-upload")
+        return
+
+    s3_inventory_object = next((x for x in settings['s3_inventory'] if x['file'] == s3_path), None)
+    if s3_inventory_object:
+        print("--in-inventory", end=' ')
+        # Check MD5
+        if (get_file_hash(full_local_path) != s3_inventory_object['md5']):
+            print ("--different-hash", end=' ')
+            return upload_single_file(settings, local_rel_path)
+        if(settings['s3-storage'] != s3_inventory_object['storage']):
+            print("--different-storage", end=' ')
+            return upload_single_file(settings, local_rel_path)
+        print("--untouched --DONE")
+    else:
+        print(" --no-inventory", end=' ')
+        return upload_single_file(settings, local_rel_path)
+    return
+
+# Upload a file, but first checks if the file is the same, by HEADing the file in the bucket.
+def upload_files_with_head(settings, local_rel_path):
     full_local_path = "{}{}".format(settings["local"], local_rel_path)
     s3_path = "{}{}".format(settings['s3-prefix'], local_rel_path)
     file_extension = get_file_extension(local_rel_path)
@@ -51,11 +79,17 @@ def upload_files(settings, local_rel_path):
     if local_and_s3_equals(settings, full_local_path, s3_path):
         print ("--untouched --DONE")
         return
-    
-    # If files are differnt, we need to upload it again
-    print ("--uploading....", end='')
+    return upload_single_file(settings, local_rel_path)
 
+# Upload a file, checking only that we are not in dry-run mode.
+# It does not check if the file exist, or the hash.
+# Once uploaded, it validates the uploaded Md5.
+def upload_single_file(settings, local_rel_path):
+    full_local_path = "{}{}".format(settings["local"], local_rel_path)
+    s3_path = "{}{}".format(settings['s3-prefix'], local_rel_path)
+    file_extension = get_file_extension(full_local_path)
     # If we are in dry-run, then do not run anything
+    print ("--uploading....", end='')
     if settings['dry-run']:
         print (" --DRY-RUN")
     else:   
@@ -63,7 +97,7 @@ def upload_files(settings, local_rel_path):
             Body=open(full_local_path, 'rb'),
             Bucket=settings['s3_bucket'],
             Key=s3_path,
-            StorageClass="STANDARD_IA",
+            StorageClass=settings['s3_storage'],
             ContentType=get_content_type_per_extension(file_extension),
             CacheControl=get_cache_control_per_extension(file_extension)
         )
@@ -155,16 +189,16 @@ def set_mime_type(settings, s3_key):
 # mybucketname/myfolder/myfolder.csv/data/inventory_papapapa.csv.gz
 # Then folder is "mybucketname/myfolder/myfolder.csv/data/" and prefix is "inventory_"
 def get_s3_latest_object(settings, folder, prefix):
-    # print("PRINT")
-    # print("{}/inventory_".format(folder))
-    # print("mydemotestbucket2/mytestinventory.csv/data/inventory_")
     resp = settings['s3_client'].list_objects_v2(
         Bucket=settings['s3_bucket'],
         MaxKeys=100,
         StartAfter="{}/{}".format(settings['s3_bucket'],folder),
         Prefix="{}/{}".format(folder, prefix),
     )
-    last = (sorted(resp['Contents'], key=lambda obj: obj['LastModified'], reverse=True))[0]
+    # We need to remove items with size 0
+    resp_filtered = [s for s in resp['Contents'] if s['Size'] > 0]
+    # And then get the newest one
+    last = (sorted(resp_filtered, key=lambda obj: obj['LastModified'], reverse=True))[0]
     return last
 
 # Returns a zip
