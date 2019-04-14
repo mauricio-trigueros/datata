@@ -97,7 +97,8 @@ def upload_single_file(settings, local_rel_path):
             Body=open(full_local_path, 'rb'),
             Bucket=settings['s3_bucket'],
             Key=s3_path,
-            StorageClass=settings['s3_storage'],
+            StorageClass=settings['s3-storage'],
+            ACL= settings['s3-acl'],
             ContentType=get_content_type_per_extension(file_extension),
             CacheControl=get_cache_control_per_extension(file_extension)
         )

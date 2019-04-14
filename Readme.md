@@ -20,7 +20,7 @@ eval "$(pyenv init -)"
 
 2. Then create a Python virtual enviroment.
 ```
-python -m venv venv
+python -m virutalenv venv
 ```
 
 3. Load the virtualenvironment that you just created.

@@ -32,6 +32,7 @@ ALLOWED_PARAMETERS = [
     "serv-folder", # Folder inside the server, like "/var/www/myproject/"
     "s3-prefix", 
     "s3-storage",
+    "s3-acl",
     "mysql-host",     # MYSQL server url
     "mysql-port",     # MYSQL server port
     "mysql-user",     # MYSQL server username
@@ -78,6 +79,11 @@ def parse_raw_settings(raw_settings):
     if "s3-prefix" in raw_settings:
         settings['s3-prefix'] = raw_settings['s3-prefix']
 
+    if "s3-acl" in raw_settings:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.put_object
+        if raw_settings['s3-acl'] in ['private', 'public-read']:
+            settings['s3-acl'] = raw_settings['s3-acl']
+
     if "s3-storage" in raw_settings:
         # We plug this value directly in boto (http://boto3.readthedocs.io/en/latest/reference/services/s3.html)
         if raw_settings['s3-storage'] in ['STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA']:
@@ -108,7 +114,8 @@ def parse_raw_settings(raw_settings):
     settings["mysql-port"] = raw_settings['mysql-port'] if "mysql-port" in raw_settings else False
     settings["mysql-db"] = raw_settings['mysql-db'] if "mysql-db" in raw_settings else False
 
-    if settings['command']['s3_inventory']:
+    # Get bucket inventory (only if need it)
+    if ('s3_inventory' in settings['command']) and settings['command']['s3_inventory']:
         print ("Getting S3 inventory....")
         settings['s3_inventory'] = get_bucket_inventory(settings)
 

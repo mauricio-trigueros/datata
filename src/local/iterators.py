@@ -21,6 +21,7 @@ def images(settings, function_callback):
 # relativePath to be folderOne/, folderOne/insideOne/, ...
 def iterate_over_files(settings, rootPath,relativePath,functionCallback):
     # We need to concatenate the path to explore, both rootPath and relativePath ends with "/"
+    print("{}{}".format(rootPath,relativePath))
     folderContent = os.listdir("{}{}".format(rootPath,relativePath))
     for item in folderContent:
         # item is a folder name (without "/") or a file name
