@@ -100,6 +100,13 @@ command['verify_videos'] = {
     'example': 'python datata.py --command="verify_videos" --local="/Users/me/Deleteme/VIDEOS/"',
     'description': 'Verify (recursively) videos for a given folder. For each video found, it prints the video status.'
 }
+command['verify_pdfs'] = {
+    'command': 'local_commands.verify_pdfs',
+    'mandatory_values': ['local'],
+    'iterator': 'local_iterators.files',
+    'example': 'python datata.py --command="verify_pdfs" --local="/Users/me/Deleteme/files/"',
+    'description': 'Verify (recursively) pdfs for a given folder.'
+}
 
 ##
 # S3 commands

@@ -1,3 +1,4 @@
+import json
 from .file import get_file_size
 from .file import get_folder_size
 from .file import count_files_in_folder
@@ -6,12 +7,13 @@ from .file import get_file_size
 from .file import local_file_exist
 from .file import verify_and_create_local_folder_path
 from .file import get_files_size_diff
-from src.mimes import is_jpg, is_png, is_video, get_file_extension
+from src.mimes import is_jpg, is_png, is_video, is_pdf, get_file_extension
 from src.helpers import get_image_comp_command
 import os
 import sys
 import tempfile
 from .helpers import execute_command_according_strategy
+from shlex import quote
 
 def print_path(settings, local_rel_path):
     full_path = "{}/{}".format(settings['local'], local_rel_path)
@@ -77,7 +79,16 @@ def verify_videos(settings, local_rel_path):
             print ("--video-OK")
         os.close(temp_file)
 
+def verify_pdfs(settings, local_rel_path):
+    local_rel_path_clean = local_rel_path
+    full_path = "{}{}".format(settings['local'], local_rel_path_clean)
 
-
-
+    if is_pdf(local_rel_path):
+        print("Verifying pdf '{}' ".format(full_path), end='')
+        command_check_gs = "gs -dNOPAUSE -dBATCH -sDEVICE=nullpage {} -quiet >/dev/null 2>&1".format(quote(full_path))
+        result_gs = os.system(command_check_gs)
+        if(int(result_gs) > 0):
+            print("--GS_ERROR ({})".format(result_gs))
+        else:
+            print("--GS_OK")
 

@@ -65,3 +65,8 @@ def is_zip(file_path):
     extension = get_file_extension(file_path)
     if extension in ['gz']:  return True
     else: return False
+
+def is_pdf(file_path):
+    extension = get_file_extension(file_path)
+    if extension in ['pdf']: return True
+    else: return False
