@@ -2,6 +2,7 @@ import sys
 import getopt
 
 from lib.helpers import create_ssh_client_or_die
+from lib.commands_local import validate_local_folder_or_die
 
 ACTIONS = {}
 
@@ -49,6 +50,7 @@ def settings():
 	if (not 'action' in raw_settings):
 		sys.exit("Mandatory fields: action")
 
+	# Get action dictionary object
 	action = ACTIONS.get(raw_settings['action'])
 
 	# Verify that action has mandatory values
@@ -68,7 +70,11 @@ def parse_settings(raw_settings):
 	settings['action'] = raw_settings['action']
 
 	settings['serv-folder'] = raw_settings['serv-folder']
-	settings['local-folder'] = raw_settings['local-folder']
+	settings['local-folder'] = validate_local_folder_or_die(raw_settings['local-folder'])
+
+	# Dry run is not mandatory (for example, to list a bucket content)
+	if "dry-run" in raw_settings:
+		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
 
 	# Create SSH client (if need it)
 	if set(("serv-url","serv-user","serv-key")).issubset(raw_settings):
