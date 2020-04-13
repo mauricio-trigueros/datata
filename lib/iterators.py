@@ -15,9 +15,9 @@ def server_md5_files_iterator(server_client, remote_folder_path):
 		files[path] = parameters
 	return files
 		
-def local_md5_files_iterator(local_path):
+def local_md5_files_iterator(local_path, extension='*'):
 	files = {}
-	output = os.popen("cd "+local_path+" && find . -type f -exec md5 '{}' +").readlines() # Mac OS
+	output = os.popen("cd "+local_path+" && find . -type f -name '*"+extension+"' -exec md5 '{}' +").readlines() # Mac OS
 	# Line like: MD5 (./2019/12/nasa0-320x240.jpg) = cb90cffaf3c3cb4504a381a66143d445
 	for line in output:  # or another encoding
 		# a and b are "MD5" and "=," variables that we do not use

@@ -12,7 +12,9 @@ ACTIONS['download_from_server_to_local'] = {
 ACTIONS['upload_from_local_to_server'] = {
 	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
 }
-
+ACTIONS['compress_local_images'] = {
+	'mandatory_values': ['local-folder', 'local-dest', 'force', 'dry-run'],
+}
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run
@@ -22,7 +24,10 @@ ALLOWED_PARAMETERS = [
 	"serv-key",   # Path to the SSH key to connect to the server
 	"serv-folder", # Folder inside the server, like "/var/www/myproject/"
 
+	"force", # Force to run action, like compress again an existing picture
+
 	"local-folder",      # Local full path, it needs to exist
+	"local-dest",
 ]
 
 def settings():
@@ -69,12 +74,19 @@ def parse_settings(raw_settings):
 	settings = {}
 	settings['action'] = raw_settings['action']
 
-	settings['serv-folder'] = raw_settings['serv-folder']
+	if "serv-folder" in raw_settings:
+		settings['serv-folder'] = raw_settings['serv-folder']
+
 	settings['local-folder'] = validate_local_folder_or_die(raw_settings['local-folder'])
+	if "local-dest" in raw_settings:
+		settings['local-dest'] = validate_local_folder_or_die(raw_settings['local-dest'])
 
 	# Dry run is not mandatory (for example, to list a bucket content)
 	if "dry-run" in raw_settings:
 		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
+
+	if "force" in raw_settings:
+		settings['force'] = False if raw_settings['force'].lower() in ("no", "false") else True
 
 	# Create SSH client (if need it)
 	if set(("serv-url","serv-user","serv-key")).issubset(raw_settings):
