@@ -32,7 +32,7 @@ def execute_local_command(extension, force, command):
 		# if the file exist or not. Then we apply command to output files that do not exist.
 		print("Not forcing")
 		dest_files = local_md5_files_iterator(settings['local-dest'], extension)
-		res = compare_file_dicts(local_files, dest_files, False, False)
+		res = compare_file_dicts(local_files, dest_files, md5=False, verbose=False)
 		for re in res:
 			local_path = re.get('full_path')
 			local_dest = os.path.join(settings['local-dest'], re.get('relative_path'))
@@ -55,5 +55,7 @@ elif settings['action'] == 'upload_from_local_to_server':
 elif settings['action'] == 'compress_local_images':
 	execute_local_command('jpg', settings['force'], compress_local_jpg)
 	execute_local_command('png', settings['force'], compress_local_png)
+elif settings['action'] == 's3_upload':
+	print("S3 upload!!!!")
 else:
 	print("No action")
