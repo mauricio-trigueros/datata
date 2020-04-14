@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import subprocess
 
 def get_file_size(path):
@@ -14,6 +15,10 @@ def validate_local_folder_or_die(path):
 # If we are creating file with 2019/03/moon.jpeg, folder "2019/03" should exist
 def verify_and_create_folder_path(path):
 	os.popen("mkdir -p '{}'".format(os.path.dirname(path)))
+
+def get_temp_file(extension=None):
+    if(extension): return tempfile.NamedTemporaryFile(suffix=".{}".format(extension), delete=False)
+    else: return tempfile.NamedTemporaryFile(delete=False)
 
 def is_valid_local_file(path):
     return os.path.isfile(path) and os.path.getsize(path) > 0

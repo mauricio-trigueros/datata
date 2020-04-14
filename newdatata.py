@@ -6,6 +6,7 @@ from lib.comparators import compare_file_dicts
 from lib.commands_server import download_file_from_server
 from lib.commands_server import upload_file_to_server
 from lib.commands_local import is_valid_local_file, compress_local_jpg, compress_local_png
+from lib.commands_s3 import s3_inventory_iterator, s3_folder_iterator
 
 from lib.actions import settings
 
@@ -57,5 +58,8 @@ elif settings['action'] == 'compress_local_images':
 	execute_local_command('png', settings['force'], compress_local_png)
 elif settings['action'] == 's3_upload':
 	print("S3 upload!!!!")
+	#inventory = s3_inventory_iterator(settings['s3-bucket'], settings['s3_client'], settings['s3-prefix'])
+	#inventory = s3_folder_iterator(settings['s3_client'], settings['s3-bucket'], "web/")
+	#print(inventory)
 else:
 	print("No action")

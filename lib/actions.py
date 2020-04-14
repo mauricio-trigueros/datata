@@ -130,6 +130,7 @@ def parse_settings(raw_settings):
 			raw_settings['s3-secret']
 		)
 		settings['s3_client'] = s3_client
+		settings['s3-bucket'] = raw_settings['s3-bucket']
 
 	#
 	# Server settings
