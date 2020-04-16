@@ -1,8 +1,8 @@
 import sys
 import getopt
 
-from lib.helpers import create_ssh_client_or_die
 from lib.commands_s3 import S3
+from lib.commands_server import Server
 from lib.commands_local import validate_local_folder_or_die
 
 ACTIONS = {}
@@ -106,8 +106,8 @@ def parse_settings(raw_settings):
 	# 
 	# S3 settings
 	#
-	print("Creating S3..")
 	if set(('s3-bucket','s3-key','s3-secret')).issubset(raw_settings):
+		print("Creating S3..")
 		s3_class = S3(
 			settings['dry-run'],
 			raw_settings['s3-bucket'],
@@ -122,12 +122,14 @@ def parse_settings(raw_settings):
 	# Create SSH client (if need it)
 	if set(("serv-url","serv-user","serv-key")).issubset(raw_settings):
 		print ("Creating SSH client...")
-		ssh_client = create_ssh_client_or_die(
-			server=raw_settings['serv-url'], 
-			username=raw_settings['serv-user'], 
-			password='',
-			key=raw_settings['serv-key']
+		# self, dry_run, serv_url, serv_user, serv_key, serv_folder
+		ssh_client = Server(
+			settings['dry-run'],
+			raw_settings['serv-url'], 
+			raw_settings['serv-user'], 
+			raw_settings['serv-key'],
+			raw_settings['serv-folder']
 		)
-		settings['server_client'] = ssh_client
+		settings['server'] = ssh_client
 
 	return settings

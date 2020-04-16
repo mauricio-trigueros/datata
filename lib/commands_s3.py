@@ -53,7 +53,7 @@ class S3:
 		print(" found {}".format(len(files)))
 		return files
 
-	def upload_single_file(self, relative_path, full_path, md5):
+	def s3_upload_single_file(self, relative_path, full_path, md5):
 		print (" Uploading '{}' to '{}'....".format(relative_path, self.bucket), end='')
 		if self.dry_run:
 			print (" --DRY-RUN")

@@ -32,8 +32,8 @@ def local_md5_files_iterator(local_path, prefix='.', extension='*'):
 		path = path_temp[1:-1] # path_temp is like (./2019/12/nasa0-320x240.jpg), remove (./)
 		parameters = {
 			"md5": md5.rstrip(),
-			"relative_path": path,
-			"full_path": os.path.join(local_path, path)
+			"relative_path": os.path.normpath(path),
+			"full_path": os.path.normpath(os.path.join(local_path, path))
 		}
-		files[path] = parameters
+		files[os.path.normpath(path)] = parameters
 	return files
