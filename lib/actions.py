@@ -2,7 +2,7 @@ import sys
 import getopt
 
 from lib.helpers import create_ssh_client_or_die
-from lib.commands_s3 import create_s3_client_or_die
+from lib.commands_s3 import S3
 from lib.commands_local import validate_local_folder_or_die
 
 ACTIONS = {}
@@ -28,12 +28,12 @@ ALLOWED_PARAMETERS = [
 	"serv-key",   # Path to the SSH key to connect to the server
 	"serv-folder", # Folder inside the server, like "/var/www/myproject/"
 
-	"s3-key",
-	"s3-secret",
-	"s3-bucket",
-	"s3-prefix",
-	"s3-storage",
-	"s3-acl",
+	"s3-key",		# AWS IAM Key to handle the bucket
+	"s3-secret",	# AWS IAM Secret to handle the bucket
+	"s3-bucket",	# AWS S3 bucket name
+	"s3-prefix",	# AWS S3 prefix (subfolder inside the folder where we will work)
+	"s3-storage",	# AWS S3 storage to use for uploads ('STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA')
+	"s3-acl",		# AWS S3 ACL to set for uploads
 
 	"force", # Force to run action, like compress again an existing picture
 
@@ -106,35 +106,18 @@ def parse_settings(raw_settings):
 	# 
 	# S3 settings
 	#
-	if "s3-prefix" in raw_settings:
-		settings['s3-prefix'] = raw_settings['s3-prefix']
-
-	if "s3-acl" in raw_settings:
-		# https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.put_object
-		if raw_settings['s3-acl'] in ['private', 'public-read']:
-			settings['s3-acl'] = raw_settings['s3-acl']
-
-	if "s3-storage" in raw_settings:
-		# We plug this value directly in boto (http://boto3.readthedocs.io/en/latest/reference/services/s3.html)
-		if raw_settings['s3-storage'] in ['STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA']:
-			settings['s3-storage'] = raw_settings['s3-storage']
-		else:
-			sys.exit("Parameter s3-storage '{}' not valid, valids are 'STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA'".format(raw_settings['s3-storage']))
-
-	# Create S3 client (if need it)
-	if set(("s3-key", "s3-bucket", "s3-secret")).issubset(raw_settings):
-		print("Creating S3 client...")
-		s3_client = create_s3_client_or_die(
+	print("Creating S3..")
+	if set(('s3-bucket','s3-key','s3-secret')).issubset(raw_settings):
+		s3_class = S3(
+			settings['dry-run'],
 			raw_settings['s3-bucket'],
 			raw_settings['s3-key'],
-			raw_settings['s3-secret']
+			raw_settings['s3-secret'],
+			raw_settings['s3-prefix'],
+			raw_settings['s3-storage'],
+			raw_settings['s3-acl']
 		)
-		settings['s3_client'] = s3_client
-		settings['s3-bucket'] = raw_settings['s3-bucket']
-
-	#
-	# Server settings
-	#
+		settings['s3'] = s3_class
 
 	# Create SSH client (if need it)
 	if set(("serv-url","serv-user","serv-key")).issubset(raw_settings):

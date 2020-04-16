@@ -6,41 +6,72 @@ import botocore.exceptions
 
 from lib.commands_local import get_temp_file, is_valid_local_file
 
-# For a given key, bucket and secret, it tries to create a connection to this bucket.
-# If succed, returns a boto client object.
-# If false, returns false.
-def create_s3_client_or_die(bucket, key, secret):
-	client = boto3.client(
-		service_name='s3',
-		aws_access_key_id=key,
-		aws_secret_access_key=secret,
-		use_ssl=True,
-	)
-	try:
-		client.head_bucket(Bucket=bucket)
-		return client
-	except botocore.exceptions.ClientError:
-		sys.exit("Error with bucket, secret or key!")
+class S3:
+	# For a given key, bucket and secret, it tries to create a connection to this bucket.
+	# If succed, returns a boto client object.
+	# If false, returns false.
+	def __create_s3_client_or_die(self, bucket, key, secret):
+		client = boto3.client(
+			service_name='s3',
+			aws_access_key_id=key,
+			aws_secret_access_key=secret,
+			use_ssl=True,
+		)
+		try:
+			client.head_bucket(Bucket=bucket)
+			return client
+		except botocore.exceptions.ClientError:
+			sys.exit("Error with bucket, secret or key!")
 
-# Return iterator, the list of files, given the s3_folder
-def s3_folder_iterator(s3_client, bucket, s3_folder):
-	print(" Getting file list for bucket '{}' and folder '{}'...".format(bucket, s3_folder), end=' ')
-	paginator = s3_client.get_paginator('list_objects_v2')
-	pages = paginator.paginate(Bucket=bucket, MaxKeys=500, StartAfter=s3_folder, Prefix=s3_folder)
-	files = {}
-	for page in pages:
-		for obj in page['Contents']:
-			# Obj like: {'Key': '..62c1.csv.gz', 'LastModified': datetime.datetime(.), 'ETag': '"04a.."', 'Size': 20, 'StorageClass': 'STANDARD'}
-			parameters = {
-				"md5": obj.get('ETag')[1:-1],
-				"relative_path": obj.get('Key'),
-				"size": obj.get('Size'),
-				"modified": obj.get('LastModified'),
-				"storage": obj.get('StorageClass')
-			}
-			files[obj.get('Key')] = parameters
-	print(" found {}".format(len(files)))
-	return files
+	def __validate_parameter(self, name, param, options):
+		if param in options: return param
+		else: sys.exit("S3 parameter '{}' with value '{}' not in range {}".format(name, param, options))
+
+	def __init__(self, dry_run, s3_bucket, s3_key, s3_secret, s3_prefix, s3_storage, s3_acl):
+		self.dry_run = dry_run
+		self.bucket = s3_bucket
+		self.prefix = s3_prefix
+		self.client = self.__create_s3_client_or_die(s3_bucket, s3_key, s3_secret)
+		self.storage = self.__validate_parameter('storage', s3_storage, ['STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA'])
+		self.acl = self.__validate_parameter('acl', s3_acl, ['private', 'public-read'])
+
+	def folder_iterator(self):
+		paginator = self.client.get_paginator('list_objects_v2')
+		pages = paginator.paginate(Bucket=self.bucket, MaxKeys=500, StartAfter=self.prefix, Prefix=self.prefix)
+		files = {}
+		for page in pages:
+			for obj in page['Contents']:
+				# Obj like: {'Key': '..62c1.csv.gz', 'LastModified': datetime.datetime(.), 'ETag': '"04a.."', 'Size': 20, 'StorageClass': 'STANDARD'}
+				parameters = {
+					"md5": obj.get('ETag')[1:-1],
+					"relative_path": obj.get('Key'),
+					"size": obj.get('Size'),
+					"modified": obj.get('LastModified'),
+					"storage": obj.get('StorageClass')
+				}
+				files[obj.get('Key')] = parameters
+		print(" found {}".format(len(files)))
+		return files
+
+	def upload_single_file(self, relative_path, full_path, md5):
+		print (" Uploading '{}' to '{}'....".format(relative_path, self.bucket), end='')
+		if self.dry_run:
+			print (" --DRY-RUN")
+			return
+		result = self.client.put_object(
+			Body = open(full_path, 'rb'),
+			Bucket = self.bucket,
+			Key = relative_path,
+			StorageClass = self.storage,
+			ACL = self.acl
+			# ContentType=get_content_type_per_extension(file_extension),
+			# CacheControl=get_cache_control_per_extension(file_extension)
+		)
+		# Compare md5 (parameter) with 'ETag', if both are the same, we are good
+		if (md5 == result.get("ETag").strip('\"')):
+			print(" --md5-ok")
+		else:
+			print(" --md5-ERROR")
 
 # Returns a list with all the bucket stuff
 def s3_inventory_iterator(bucket, s3_client, prefix):
