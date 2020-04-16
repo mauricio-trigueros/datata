@@ -5,7 +5,8 @@ import gzip
 import shutil
 import botocore.exceptions
 
-from lib.commands_local import get_temp_file, is_valid_local_file
+from lib.commands_local import LocalFile
+from lib.commands_local import get_temp_file
 
 class S3:
 	# For a given key, bucket and secret, it tries to create a connection to this bucket.
@@ -64,17 +65,17 @@ class S3:
 		temp_gz = get_temp_file('gz')
 		temp_csv = get_temp_file('csv')
 
-		self.download_single_file(last_inventory_file, temp_gz.name)
+		self.download_single_file(last_inventory_file, temp_gz)
 
-		print("Unzipping file to {}...".format(temp_csv.name), end=' ')
-		with gzip.open(temp_gz.name, 'rb') as f_in:
-			with open(temp_csv.name, 'wb') as f_out:
+		print("Unzipping file to {}...".format(temp_csv.path), end=' ')
+		with gzip.open(temp_gz.path, 'rb') as f_in:
+			with open(temp_csv.path, 'wb') as f_out:
 				shutil.copyfileobj(f_in, f_out)
 		print(" done!")
 
 		# Read inventory file
 		files = {}
-		for line in open(temp_csv.name, 'r+'):
+		for line in open(temp_csv.path, 'r+'):
 			csv_row = line.split(',') #returns a list ["1","50","60"]
 			row = {}
 			row['relative_path'] = csv_row[1].strip('\"')
@@ -85,17 +86,12 @@ class S3:
 			files[csv_row[1].strip('\"')] = row
 		return files
 
-	def download_single_file(self, s3_file_dict, local_path):
-		print(" Downloading file {} -> {} ...".format(s3_file_dict.get('relative_path'), local_path), end=' ')
-		# Check that folder path exist in local
-		os.popen("mkdir -p '{}'".format(os.path.dirname(local_path)))
-		# Download the file
-		self.client.download_file(self.bucket, s3_file_dict.get('relative_path'), local_path)
-		# Check that downloaded file is valid (check MD5!!)
-		if is_valid_local_file(local_path):
-			print(' done!')
-		else:
-			raise Exception('Error downloading file')
+	def download_single_file(self, s3_file_dict, local_file):
+		print(" Downloading file {} -> {} ...".format(s3_file_dict.get('relative_path'), local_file.path), end=' ')
+		local_file.verify_folder_path()
+		self.client.download_file(self.bucket, s3_file_dict.get('relative_path'), local_file.path)
+		local_file.verify_md5(s3_file_dict.get('md5'))
+		print('--done-and-verified')
 
 	def s3_upload_single_file(self, relative_path, full_path, md5):
 		print (" Uploading '{}' to '{}'....".format(relative_path, self.bucket), end='')

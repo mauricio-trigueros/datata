@@ -3,7 +3,7 @@ import getopt
 
 from lib.commands_s3 import S3
 from lib.commands_server import Server
-from lib.commands_local import validate_local_folder_or_die
+from lib.commands_local import Local
 
 ACTIONS = {}
 
@@ -95,10 +95,6 @@ def parse_settings(raw_settings):
 	if "serv-folder" in raw_settings:
 		settings['serv-folder'] = raw_settings['serv-folder']
 
-	settings['local-folder'] = validate_local_folder_or_die(raw_settings['local-folder'])
-	if "local-dest" in raw_settings:
-		settings['local-dest'] = validate_local_folder_or_die(raw_settings['local-dest'])
-
 	# Dry run is not mandatory (for example, to list a bucket content)
 	if "dry-run" in raw_settings:
 		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
@@ -106,9 +102,16 @@ def parse_settings(raw_settings):
 	if "force" in raw_settings:
 		settings['force'] = False if raw_settings['force'].lower() in ("no", "false") else True
 
-	# 
+	# Local settings
+	if set(('local-folder',)).issubset(raw_settings):
+		local = Local(
+			settings['dry-run'],
+			raw_settings['local-folder'],
+			raw_settings.get('local-dest', False)
+		)
+		settings['local'] = local
+
 	# S3 settings
-	#
 	if set(('s3-bucket','s3-key','s3-secret')).issubset(raw_settings):
 		print("Creating S3..")
 		s3_class = S3(
