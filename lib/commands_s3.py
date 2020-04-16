@@ -1,3 +1,4 @@
+import os
 import sys
 import boto3
 import gzip
@@ -35,9 +36,9 @@ class S3:
 		self.storage = self.__validate_parameter('storage', s3_storage, ['STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA'])
 		self.acl = self.__validate_parameter('acl', s3_acl, ['private', 'public-read'])
 
-	def folder_iterator(self):
+	def folder_iterator(self, s3_folder):
 		paginator = self.client.get_paginator('list_objects_v2')
-		pages = paginator.paginate(Bucket=self.bucket, MaxKeys=500, StartAfter=self.prefix, Prefix=self.prefix)
+		pages = paginator.paginate(Bucket=self.bucket, MaxKeys=500, StartAfter=s3_folder, Prefix=s3_folder)
 		files = {}
 		for page in pages:
 			for obj in page['Contents']:
@@ -52,6 +53,49 @@ class S3:
 				files[obj.get('Key')] = parameters
 		print(" found {}".format(len(files)))
 		return files
+
+	def inventory_iterator(self):
+		inventory_files = self.folder_iterator(self.bucket+'/inventory/data/')		
+		# Get latest inventory file
+		last_inventory_file = (sorted(inventory_files.values(), key=lambda obj: obj.get('modified'), reverse=True))[0]
+		print("Last inventory is {} from {}".format(last_inventory_file.get('relative_path'), last_inventory_file.get('modified')))
+
+		# Download file to a temporal file, and extract it
+		temp_gz = get_temp_file('gz')
+		temp_csv = get_temp_file('csv')
+
+		self.download_single_file(last_inventory_file, temp_gz.name)
+
+		print("Unzipping file to {}...".format(temp_csv.name), end=' ')
+		with gzip.open(temp_gz.name, 'rb') as f_in:
+			with open(temp_csv.name, 'wb') as f_out:
+				shutil.copyfileobj(f_in, f_out)
+		print(" done!")
+
+		# Read inventory file
+		files = {}
+		for line in open(temp_csv.name, 'r+'):
+			csv_row = line.split(',') #returns a list ["1","50","60"]
+			row = {}
+			row['relative_path'] = csv_row[1].strip('\"')
+			row['size'] = csv_row[2].strip('\"')
+			row['modified'] = csv_row[3].strip('\"')
+			row['md5'] = csv_row[4].strip('\"')
+			row['storage'] = csv_row[5].replace('"', '').rstrip("\n\r")
+			files[csv_row[1].strip('\"')] = row
+		return files
+
+	def download_single_file(self, s3_file_dict, local_path):
+		print(" Downloading file {} -> {} ...".format(s3_file_dict.get('relative_path'), local_path), end=' ')
+		# Check that folder path exist in local
+		os.popen("mkdir -p '{}'".format(os.path.dirname(local_path)))
+		# Download the file
+		self.client.download_file(self.bucket, s3_file_dict.get('relative_path'), local_path)
+		# Check that downloaded file is valid (check MD5!!)
+		if is_valid_local_file(local_path):
+			print(' done!')
+		else:
+			raise Exception('Error downloading file')
 
 	def s3_upload_single_file(self, relative_path, full_path, md5):
 		print (" Uploading '{}' to '{}'....".format(relative_path, self.bucket), end='')
@@ -72,41 +116,3 @@ class S3:
 			print(" --md5-ok")
 		else:
 			print(" --md5-ERROR")
-
-# Returns a list with all the bucket stuff
-def s3_inventory_iterator(bucket, s3_client, prefix):
-	inventory_folder = "{}/inventory/data/".format(bucket)
-	inventory_files = s3_folder_iterator(s3_client, bucket, inventory_folder)
-
-	# Get latest inventory file
-	last_inventory_file = (sorted(inventory_files.values(), key=lambda obj: obj.get('modified'), reverse=True))[0]
-	print("Last inventory is {} from {}".format(last_inventory_file.get('relative_path'), last_inventory_file.get('modified')))
-
-	# Download file to a temporal file, and extract it
-	temp_gz = get_temp_file('gz')
-	temp_csv = get_temp_file('csv')
-	print("Downloading inventory to '{}'...".format(temp_gz.name), end=' ')
-	s3_client.download_file(bucket, last_inventory_file.get('relative_path'), temp_gz.name)
-	if is_valid_local_file(temp_gz.name):
-		print(' done!')
-	else:
-		print(' error!')
-		return
-	print("Unzipping file to {}...".format(temp_csv.name), end=' ')
-	with gzip.open(temp_gz.name, 'rb') as f_in:
-		with open(temp_csv.name, 'wb') as f_out:
-			shutil.copyfileobj(f_in, f_out)
-	print(" done!")
-
-	# Read inventory file
-	files = {}
-	for line in open(temp_csv.name, 'r+'):
-		csv_row = line.split(',') #returns a list ["1","50","60"]
-		row = {}
-		row['relative_path'] = csv_row[1].strip('\"')
-		row['size'] = csv_row[2].strip('\"')
-		row['modified'] = csv_row[3].strip('\"')
-		row['md5'] = csv_row[4].strip('\"')
-		row['storage'] = csv_row[5].replace('"', '').rstrip("\n\r")
-		files[csv_row[1].strip('\"')] = row
-	return files

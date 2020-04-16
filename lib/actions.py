@@ -19,6 +19,9 @@ ACTIONS['compress_local_images'] = {
 ACTIONS['s3_upload'] = {
 	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
 }
+ACTIONS['s3_download'] = {
+	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
+}
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run
