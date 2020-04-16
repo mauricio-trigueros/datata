@@ -1,20 +1,5 @@
 import os
 
-def server_md5_files_iterator(server_client, remote_folder_path):
-	files = {}
-	# It will list all the files in current directory and subdirectories, returning file path and file MD5
-	folderContent = server_client.execute("cd "+remote_folder_path+" && find -type f -exec md5sum '{}' +")
-	for index, item in enumerate(folderContent):
-		md5, path_temp = item.splitlines().pop().split()
-		path = path_temp[2:] # path looks like "./antecesores.png", we need to remove first "./"
-		parameters = {
-			"md5": md5.rstrip(),
-			"relative_path": path,
-			"full_path": os.path.join(remote_folder_path, path)
-		}
-		files[path] = parameters
-	return files
-
 # If we need the iterator to run a command in local machine (like compress images), we do not need prefix.
 # If we need the iterator to compare it against an S3 iterator: S3 iterator will have as relative_path 
 # like "folder/in/bucket/file.extension", so we need our local iterator to have the same "relative_path",

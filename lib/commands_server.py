@@ -22,6 +22,14 @@ class create_ssh_client_or_die:
 			return to_return
 
 class Server:
+
+	def __execute_command(self, command):
+		execution = self.client.execute(command)
+		if (len(execution) > 0):
+			return execution[0].rstrip()
+		else :
+			raise Exception("No result for command: '{}'".format(command))
+
 	def __init__(self, dry_run, serv_url, serv_user, serv_key, serv_folder):
 		print("Creating Server...")
 		self.dry_run = dry_run
@@ -42,6 +50,10 @@ class Server:
 			}
 			files[path] = parameters
 		return files
+
+	def get_hash(self, server_path):
+		command = "md5sum '"+server_path+"' | awk '{print $1}'"
+		return self.__execute_command(command)
 
 	def download_file(self, server_file_dict, local_path):
 		print(" Downloading file {} ...".format(server_file_dict.get('relative_path')), end=' ')
@@ -73,21 +85,7 @@ class Server:
 		sftp = self.client.client.open_sftp()
 		sftp.put(local_file_dict.get('full_path'), server_path)
 		sftp.close()
-		uploaded_file_hash = get_server_file_hash(self.client, server_path)
-		if uploaded_file_hash == local_file_dict.get('md5'):
+		if self.get_hash(server_path) == local_file_dict.get('md5'):
 			print(' --OK')
 		else:
 			print(' --ERROR')
-
-
-def execute_server_command(server_client, command):
-	execution = server_client.execute(command)
-	if (len(execution) > 0):
-		return execution[0].rstrip()
-	else :
-		raise Exception("No result for command: '{}'".format(command))
-
-def get_server_file_hash(server_client, server_path):
-	command = "md5sum '"+server_path+"' | awk '{print $1}'"
-	return execute_server_command(server_client, command)
-

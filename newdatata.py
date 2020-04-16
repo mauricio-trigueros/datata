@@ -1,6 +1,5 @@
 import os
 import sys
-from lib.iterators import server_md5_files_iterator
 from lib.iterators import local_md5_files_iterator
 from lib.comparators import compare_file_dicts
 from lib.commands_local import is_valid_local_file, compress_local_jpg, compress_local_png
