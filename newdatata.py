@@ -4,9 +4,9 @@ from lib.comparators import compare_file_dicts
 from lib.commands_local import LocalFile
 from lib.actions import settings
 
-print ("   Reading parameters from terminal....")
+print ("Reading parameters from terminal....")
 settings = settings()
-print (settings)
+#print (settings)
 
 if settings['action'] == 'download_from_server_to_local':
 	print(" Downloading content from server to local...")

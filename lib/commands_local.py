@@ -4,12 +4,6 @@ import tempfile
 import subprocess
 import hashlib
 
-def get_temp_file(extension=None):
-	if(extension): 
-		return LocalFile(tempfile.NamedTemporaryFile(suffix=".{}".format(extension), delete=False).name)
-	else: 
-		return LocalFile(tempfile.NamedTemporaryFile(delete=False).name)
-
 class LocalFile:
 	# Path may exist (yet) or not!
 	def __init__(self, path):
@@ -30,14 +24,18 @@ class LocalFile:
 	def get_size(self):
 		return os.path.getsize(self.path)
 
-	def is_valid_file(self):
-		is_valid = os.path.isfile(self.path) and os.path.getsize(self.path) > 0
-		if not is_valid: raise Exception("Local path {} not valid".format(self.path))
+	def is_valid(self):
+		return (os.path.isfile(self.path) and os.path.getsize(self.path) > 0)
+
+	def is_valid_or_die(self):
+		if not self.is_valid():
+			raise Exception("Local path {} not valid".format(self.path))
 
 class Local:
-	def __init__(self, dry_run, local_folder, dest_folder):
-		print("Creating Local for folder {}".format(local_folder))
+	def __init__(self, force, dry_run, local_folder, dest_folder):
+		print("Creating Local for folder {}, force: {} and dry_run: {}".format(local_folder, force, dry_run))
 		self.dry_run = dry_run
+		self.force = force
 		self.origin = self.validate_local_folder_or_die(local_folder)
 		self.dest = self.validate_local_folder_or_die(dest_folder)
 
@@ -50,16 +48,30 @@ class Local:
 			com = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(origin_file.path, dest_file.path)
 			self.execute_command(com, origin_file, dest_file)
 
+	def exec(self, command, origin_file, dest_file):
+		dest_file.verify_folder_path()
+		os.system(command)
+		dest_file.is_valid_or_die()		
+
 	def execute_command(self, command, origin_file, dest_file):
 		print(" Running '{}' on '{}'...".format(command.split(' ')[0], origin_file.path), end=' ')
-		dest_file.verify_folder_path()
-		#self.verify_and_create_folder_path(dest_file_path)
 		if self.dry_run:
 			print("--DRY-RUN")
 			return
-		os.system(command)
-		dest_file.is_valid_file()
-		self.print_size_reduction(origin_file, dest_file)
+
+		if not dest_file.is_valid():
+			print(' --no-output-file... ', end=' ')
+			self.exec(command, origin_file, dest_file)
+			self.print_size_reduction(origin_file, dest_file)
+			return
+		
+		# Dest_file exist, check we should force it or not
+		if self.force:
+			print(' --overwritting... ', end=' ')
+			self.exec(command, origin_file, dest_file)
+			self.print_size_reduction(origin_file, dest_file)
+		else:
+			print(' --output-file-exist-no-forcing SKIP!')
 
 	def print_size_reduction(self, origin_file, dest_file):
 		reduction = int ((dest_file.get_size() / origin_file.get_size()) * 100)
@@ -90,3 +102,8 @@ class Local:
 		else:
 			return path
 
+def get_temp_file(extension=None) -> LocalFile:
+	if(extension): 
+		return LocalFile(tempfile.NamedTemporaryFile(suffix=".{}".format(extension), delete=False).name)
+	else: 
+		return LocalFile(tempfile.NamedTemporaryFile(delete=False).name)

@@ -86,7 +86,7 @@ class S3:
 			files[csv_row[1].strip('\"')] = row
 		return files
 
-	def download_single_file(self, s3_file_dict, local_file):
+	def download_single_file(self, s3_file_dict, local_file: LocalFile):
 		print(" Downloading file {} -> {} ...".format(s3_file_dict.get('relative_path'), local_file.path), end=' ')
 		local_file.verify_folder_path()
 		self.client.download_file(self.bucket, s3_file_dict.get('relative_path'), local_file.path)

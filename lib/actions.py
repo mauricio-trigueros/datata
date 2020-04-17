@@ -65,21 +65,15 @@ def settings():
 		if opt[2:] in ALLOWED_PARAMETERS:
 			raw_settings[opt[2:]] = arg
 
-	# Value command is mandatory!!
-	if not 'action' in raw_settings:
-		sys.exit("Mandatory fields: action")
-
-	# Get action dictionary object
-	action = ACTIONS.get(raw_settings['action'])
-
+	action = ACTIONS.get(raw_settings['action'], False)
 	if not action:
-		sys.exit("Unknown action '{}'".format(raw_settings['action']))
+		sys.exit("Unknown or wrong parameter --action '{}'".format(raw_settings['action']))
 
 	# Verify that action has mandatory values
 	for field in action.get('mandatory_values'):
-		print ("Validating field '{}'... ".format(field), end='')
+		print ("  Validating field '{}'... ".format(field), end='')
 		if field in raw_settings:
-			print ("present!")
+			print ("present: {}".format(raw_settings[field]))
 		else:
 			print ("missing!!")
 			sys.exit("Mandatory field '{}' not found".format(field))
@@ -87,27 +81,25 @@ def settings():
 	return parse_settings(raw_settings)
 
 def parse_settings(raw_settings):
-	print(raw_settings)
 	# Parsing settings
 	settings = {}
-	settings['action'] = raw_settings['action']
 
-	if "serv-folder" in raw_settings:
-		settings['serv-folder'] = raw_settings['serv-folder']
+	# Action is always mandatory
+	settings['action'] = raw_settings['action']
 
 	# Dry run is not mandatory (for example, to list a bucket content)
 	if "dry-run" in raw_settings:
-		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false") else True
-
+		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false", False) else True
 	if "force" in raw_settings:
 		settings['force'] = False if raw_settings['force'].lower() in ("no", "false") else True
 
 	# Local settings
 	if set(('local-folder',)).issubset(raw_settings):
 		local = Local(
-			settings['dry-run'],
-			raw_settings['local-folder'],
-			raw_settings.get('local-dest', False)
+			dry_run=settings['dry-run'],
+			force=settings['force'],
+			local_folder=raw_settings['local-folder'],
+			dest_folder=raw_settings.get('local-dest', False)
 		)
 		settings['local'] = local
 
