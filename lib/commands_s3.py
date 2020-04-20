@@ -93,7 +93,7 @@ class S3:
 		local_file.verify_md5(s3_file_dict.get('md5'))
 		print('--done-and-verified')
 
-	def s3_upload_single_file(self, relative_path, full_path, md5):
+	def upload_single_file(self, relative_path, full_path, md5):
 		print (" Uploading '{}' to '{}'....".format(relative_path, self.bucket), end='')
 		if self.dry_run:
 			print (" --DRY-RUN")

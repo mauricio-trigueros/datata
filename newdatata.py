@@ -42,5 +42,8 @@ elif settings['action'] == 's3_download':
 	for re in res:
 	 	local_path = LocalFile(os.path.join(settings['local'].origin, re.get('relative_path')))
 	 	settings['s3'].download_single_file(re, local_path)
+elif settings['action'] == 'backup_database':
+	db_dump = settings['mysql'].dump_database(settings['local'].origin)
+	db_dump.tar(LocalFile(db_dump.path+'.tar.bz2'))
 else:
 	print("No action")

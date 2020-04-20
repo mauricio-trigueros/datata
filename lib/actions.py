@@ -4,6 +4,7 @@ import getopt
 from lib.commands_s3 import S3
 from lib.commands_server import Server
 from lib.commands_local import Local
+from lib.commands_mysql import Mysql
 
 ACTIONS = {}
 
@@ -22,6 +23,9 @@ ACTIONS['s3_upload'] = {
 ACTIONS['s3_download'] = {
 	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
 }
+ACTIONS['backup_database'] = {
+	'mandatory_values': ['local-folder', 'mysql-host', 'mysql-port', 'mysql-user', 'mysql-pass', 'mysql-db'],
+}
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run
@@ -38,6 +42,12 @@ ALLOWED_PARAMETERS = [
 	"s3-storage",	# AWS S3 storage to use for uploads ('STANDARD', 'REDUCED_REDUNDANCY', 'STANDARD_IA')
 	"s3-acl",		# AWS S3 ACL to set for uploads
 
+	"mysql-host",
+	"mysql-port",
+	"mysql-user",
+	"mysql-pass",
+	"mysql-db",
+
 	"force", # Force to run action, like compress again an existing picture
 
 	"local-folder",      # Local full path, it needs to exist
@@ -53,7 +63,6 @@ def settings():
 		)
 	except getopt.GetoptError as e:
 		print ("Wrong parameters: {}".format(e))
-		print ("Mandatory parameter is '--command'")
 		print ("Allowed parameters are: {}".format(', '.join(ALLOWED_PARAMETERS)))
 		sys.exit(2)
 
@@ -88,10 +97,12 @@ def parse_settings(raw_settings):
 	settings['action'] = raw_settings['action']
 
 	# Dry run is not mandatory (for example, to list a bucket content)
-	if "dry-run" in raw_settings:
-		settings['dry-run'] = False if raw_settings['dry-run'].lower() in ("no", "false", False) else True
-	if "force" in raw_settings:
-		settings['force'] = False if raw_settings['force'].lower() in ("no", "false") else True
+	settings['dry-run'] = False if raw_settings.get('dry-run', 'True').lower() in ("no", "false", False) else True
+	settings['force'] = False if raw_settings.get('force', 'False').lower() in ("no", "false") else True
+	# if "dry-run" in raw_settings:
+	# 	settings['dry-run'] = False if raw_settings.get('dry-run').lower() in ("no", "false", False) else True
+	# if "force" in raw_settings:
+	# 	settings['force'] = False if raw_settings['force'].lower() in ("no", "false") else True
 
 	# Local settings
 	if set(('local-folder',)).issubset(raw_settings):
@@ -130,4 +141,16 @@ def parse_settings(raw_settings):
 		)
 		settings['server'] = ssh_client
 
+	# MySQL settings
+	if set(("mysql-host","mysql-port","mysql-user","mysql-pass","mysql-db")).issubset(raw_settings):
+		print("Creating MYSQL client")
+		mysql_client = Mysql(
+			raw_settings['mysql-host'],
+			raw_settings['mysql-port'],
+			raw_settings['mysql-user'],
+			raw_settings['mysql-pass'],
+			raw_settings['mysql-db'],
+		)
+		settings['mysql'] = mysql_client
+	
 	return settings

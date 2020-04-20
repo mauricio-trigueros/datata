@@ -6,6 +6,8 @@ import hashlib
 
 class LocalFile:
 	# Path may exist (yet) or not!
+	# For example, it can be the place where we will dump the database
+	# (it does not exist once we create it, but it will later)
 	def __init__(self, path):
 		self.path = path
 
@@ -30,6 +32,17 @@ class LocalFile:
 	def is_valid_or_die(self):
 		if not self.is_valid():
 			raise Exception("Local path {} not valid".format(self.path))
+
+	def compare_size(self, output_file):
+		reduction = int ((output_file.get_size() / self.get_size()) * 100)
+		print ("--result-size-{}%".format(reduction))
+
+	def tar(self, output_file):
+		print("  Compressing '{}' ... ".format(self.path), end=' ')
+		command = "tar -cpzf '{}.tar.bz2' -C / '{}' ".format(self.path, self.path)
+		self.is_valid_or_die()
+		os.system(command)
+		self.compare_size(output_file)
 
 class Local:
 	def __init__(self, force, dry_run, local_folder, dest_folder):
