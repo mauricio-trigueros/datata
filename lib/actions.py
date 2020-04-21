@@ -130,8 +130,6 @@ def parse_settings(raw_settings):
 
 	# Create SSH client (if need it)
 	if set(("serv-url","serv-user","serv-key")).issubset(raw_settings):
-		print ("Creating SSH client...")
-		# self, dry_run, serv_url, serv_user, serv_key, serv_folder
 		ssh_client = Server(
 			settings['dry-run'],
 			raw_settings['serv-url'], 
@@ -143,7 +141,6 @@ def parse_settings(raw_settings):
 
 	# MySQL settings
 	if set(("mysql-host","mysql-port","mysql-user","mysql-pass","mysql-db")).issubset(raw_settings):
-		print("Creating MYSQL client")
 		mysql_client = Mysql(
 			raw_settings['mysql-host'],
 			raw_settings['mysql-port'],

@@ -8,6 +8,14 @@ import botocore.exceptions
 from lib.commands_local import LocalFile
 from lib.commands_local import get_temp_file
 
+class S3File:
+	def __init__(self, relative_path, md5, size, modified, storage):
+		self.relative_path = relative_path
+		self.ext_md5 = ext_md5
+		self.ext_size = size
+		self.modified = modified
+		self.storage = storage
+
 class S3:
 	# For a given key, bucket and secret, it tries to create a connection to this bucket.
 	# If succed, returns a boto client object.

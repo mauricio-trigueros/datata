@@ -8,8 +8,10 @@ class LocalFile:
 	# Path may exist (yet) or not!
 	# For example, it can be the place where we will dump the database
 	# (it does not exist once we create it, but it will later)
-	def __init__(self, path):
+	def __init__(self, path, relative_path=None, md5=None):
 		self.path = path
+		self.relative_path = relative_path # Subset of the path
+		self.internal_md5 = md5
 
 	# If path is a/b/c.txt, makes sure that folders a/b exist
 	def verify_folder_path(self):
@@ -21,7 +23,10 @@ class LocalFile:
 			raise Exception('File {} has md5 {}, expected {}'.format(self.path, file_md5, expected_md5))
 
 	def get_md5(self):
-		return hashlib.md5(open(self.path,'rb').read()).hexdigest()
+		if self.internal_md5:
+			return self.internal_md5
+		else:
+			return hashlib.md5(open(self.path,'rb').read()).hexdigest()
 
 	def get_size(self):
 		return os.path.getsize(self.path)
@@ -91,7 +96,7 @@ class Local:
 		print ("--result-size-{}%".format(reduction))
 
 	def local_md5_files_iterator(self, local_path, prefix='.', extension='*'):
-		print("Getting files iterator for path '{}' with prefix '{}' and extension '{}'".format(local_path, prefix, extension))
+		print("Getting local files iterator for path '{}' with prefix '{}' and extension '{}'".format(local_path, prefix, extension))
 		files = {}
 		command = "cd '"+local_path+"' && find "+prefix+" -type f -name '*."+extension+"' -exec md5 '{}' + | awk '{print $2 \" \" $4}'"
 		output = os.popen(command).readlines() # Mac OS
@@ -99,14 +104,13 @@ class Local:
 		# (./2019/12/nasa0-320x240.jpg) and cb90cffaf3c3cb4504a381a66143d445
 		for line in output:  # or another encoding
 			# First column is path (./2019/12/nasa0-320x240.jpg), and second is MD5 cb90cffaf3c3cb4504a381a66143d445
-			path_temp,md5 = line.split()
-			path = path_temp[1:-1] # path_temp is like (./2019/12/nasa0-320x240.jpg), remove (./)
-			parameters = {
-				"md5": md5.rstrip(),
-				"relative_path": os.path.normpath(path),
-				"full_path": os.path.normpath(os.path.join(local_path, path))
-			}
-			files[os.path.normpath(path)] = parameters
+			path_temp,md5_temp = line.split()
+			relative_path = os.path.normpath(path_temp[1:-1]) # path_temp is like (./2019/12/nasa0-320x240.jpg), remove (./)
+			files[relative_path] = LocalFile(
+				path=os.path.normpath(os.path.join(local_path, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
+				relative_path=relative_path,
+				md5=md5_temp.rstrip()
+			)
 		return files
 
 	def validate_local_folder_or_die(self, path):

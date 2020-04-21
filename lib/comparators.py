@@ -14,7 +14,7 @@ def compare_file_dicts(dictA, dictB, md5=True, verbose=True):
 			if verbose: print('--found', end=' ')
 			# We may want to compare MD5
 			if md5:
-				if dictA[fil]['md5'] == remote['md5']:
+				if dictA[fil].get_md5() == remote.get_md5():
 					if verbose: print('--same-md5')
 				else:
 					if verbose: print('--DIFFERENT-MD5')

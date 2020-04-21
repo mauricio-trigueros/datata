@@ -2,6 +2,8 @@ import os
 import hashlib
 import paramiko
 
+from lib.commands_local import LocalFile
+
 class create_ssh_client_or_die:
 	client = None
 
@@ -21,6 +23,27 @@ class create_ssh_client_or_die:
 			to_return =  stdoutInt.readlines()
 			return to_return
 
+class ServerFile:
+	def __execute_command(self, command):
+		execution = self.ssh_client.execute(command)
+		if (len(execution) > 0):
+			return execution[0].rstrip()
+		else :
+			raise Exception("No result for command: '{}'".format(command))
+
+	def __init__(self, ssh_client, path, relative_path=None, md5=None):
+		self.ssh_client = ssh_client
+		self.path = path
+		self.relative_path = relative_path # Subset of the path
+		self.internal_md5 = md5
+
+	def get_md5(self):
+		if self.internal_md5:
+			return self.internal_md5
+		else:
+			command = "md5sum '"+self.path+"' | awk '{print $1}'"
+			return self.__execute_command(command)
+
 class Server:
 
 	def __execute_command(self, command):
@@ -31,61 +54,60 @@ class Server:
 			raise Exception("No result for command: '{}'".format(command))
 
 	def __init__(self, dry_run, serv_url, serv_user, serv_key, serv_folder):
-		print("Creating Server...")
+		print("Creating Server {}@{}{}...".format(serv_user, serv_url, serv_folder))
 		self.dry_run = dry_run
 		self.client = create_ssh_client_or_die(serv_url, serv_user, serv_key)
-		self.folder = serv_folder
+		self.folder = self.check_folder_exist(serv_folder)
+
+	def check_folder_exist(self, server_path):
+		command = "test -d '"+server_path+"' ;echo $? "
+		folder_is_missing = bool(int(self.__execute_command(command)))
+		if folder_is_missing:
+			raise Exception("Server folder '{}' is missing".format(server_path))
+		return server_path
 
 	def md5_files_iterator(self):
 		files = {}
 		# It will list all the files in current directory and subdirectories, returning file path and file MD5
 		folderContent = self.client.execute("cd "+self.folder+" && find -type f -exec md5sum '{}' +")
 		for index, item in enumerate(folderContent):
-			md5, path_temp = item.splitlines().pop().split()
-			path = path_temp[2:] # path looks like "./antecesores.png", we need to remove first "./"
-			parameters = {
-				"md5": md5.rstrip(),
-				"relative_path": path,
-				"full_path": os.path.join(self.folder, path)
-			}
-			files[path] = parameters
+			md5_temp, path_temp = item.splitlines().pop().split()
+			relative_path = path_temp[2:] # path looks like "./antecesores.png", we need to remove first "./"
+			files[relative_path] = ServerFile(
+				ssh_client=self.client,
+				path=os.path.normpath(os.path.join(self.folder, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
+				relative_path=relative_path,
+				md5=md5_temp.rstrip()
+			)
 		return files
 
-	def get_hash(self, server_path):
-		command = "md5sum '"+server_path+"' | awk '{print $1}'"
-		return self.__execute_command(command)
-
-	def download_file(self, server_file_dict, local_path):
-		print(" Downloading file {} ...".format(server_file_dict.get('relative_path')), end=' ')
+	def download_file(self, server_file: ServerFile, local_file: LocalFile):
+		print(" Downloading file {} ...".format(server_file.relative_path), end=' ')
 		if (self.dry_run):
 			print(" --DRY-RUN")
 			return
-		# If we are downloading a file with path 2019/03/moon.jpeg, folder "2019/03" should exist
-		os.popen("mkdir -p '{}'".format(os.path.dirname(local_path)))
-		# Download the file
+		local_file.verify_folder_path()
 		print(" --downloading... ", end=' ')
 		sftp = self.client.client.open_sftp()
-		sftp.get(server_file_dict.get('full_path'), local_path)
+		sftp.get(server_file.path, local_file.path)
 		sftp.close()
-		# Verify downloaded file hash
-		downloaded_file_hash = hashlib.md5(open(local_path,'rb').read()).hexdigest()
-		if downloaded_file_hash == server_file_dict.get('md5'):
+		if local_file.get_md5() == server_file.get_md5():
 			print(' --OK')
 		else:
-			print(' --ERROR')
+			print(' --ERROR-WITH-MD5')
 
-	def upload_file(self, local_file_dict, server_path):
-		print(" Uploading file {} ...".format(local_file_dict.get('relative_path')), end=' ')
+	def upload_file(self, local_file: LocalFile, server_file: ServerFile):
+		print(" Uploading file {} ...".format(local_file.relative_path), end=' ')
 		if (self.dry_run):
 			print(" --DRY-RUN")
 			return
 		# If we are uploading a file with path 2019/03/moon.jpeg, folder "2019/03" should exist
-		self.client.execute("mkdir -p '{}'".format(os.path.dirname(server_path)))
+		self.client.execute("mkdir -p '{}'".format(os.path.dirname(server_file.path)))
 		print(" --uploading... ", end=' ')
 		sftp = self.client.client.open_sftp()
-		sftp.put(local_file_dict.get('full_path'), server_path)
+		sftp.put(local_file.path, server_file.path)
 		sftp.close()
-		if self.get_hash(server_path) == local_file_dict.get('md5'):
+		if local_file.get_md5() == server_file.get_md5():
 			print(' --OK')
 		else:
-			print(' --ERROR')
+			print(' --ERROR-WITH-MD5')
