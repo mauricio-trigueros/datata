@@ -7,7 +7,6 @@ from lib.actions import settings
 
 print ("Reading parameters from terminal....")
 settings = settings()
-#print (settings)
 
 if settings['action'] == 'download_from_server_to_local':
 	print(" Downloading content from server to local...")
@@ -34,17 +33,18 @@ elif settings['action'] == 's3_upload':
 	print("S3 upload!!!!")
 	inventory = settings['s3'].folder_iterator(settings['s3'].prefix)
 	local_files = settings['local'].local_md5_files_iterator(settings['local'].origin, prefix=settings['s3'].prefix)
-	res = compare_file_dicts(local_files, inventory, md5=False, verbose=True)
-	for re in res:
-	 	settings['s3'].upload_single_file(re.get('relative_path'), re.get('full_path'), re.get('md5'))
+	to_upload = compare_file_dicts(local_files, inventory, md5=False, verbose=True)
+	for local_file in to_upload:
+	 	settings['s3'].upload_single_file(local_file)
+
 elif settings['action'] == 's3_download':
-	print("S3 download!!!!")
 	inventory = settings['s3'].folder_iterator(settings['s3'].prefix)
 	local_files = settings['local'].local_md5_files_iterator(settings['local'].origin, prefix=settings['s3'].prefix) 
-	res = compare_file_dicts(inventory, local_files, md5=False, verbose=True)
-	for re in res:
-	 	local_path = LocalFile(os.path.join(settings['local'].origin, re.get('relative_path')))
-	 	settings['s3'].download_single_file(re, local_path)
+	to_download = compare_file_dicts(inventory, local_files, md5=False, verbose=True)
+	for s3_file in to_download:
+		local_file = LocalFile(os.path.join(settings['local'].origin, s3_file.relative_path))
+		settings['s3'].download_single_file(s3_file, local_file)
+
 elif settings['action'] == 'backup_database':
 	db_dump = settings['mysql'].dump_database(settings['local'].origin)
 	db_dump.tar(LocalFile(db_dump.path+'.tar.bz2'))

@@ -11,8 +11,8 @@ from lib.commands_local import get_temp_file
 class S3File:
 	def __init__(self, relative_path, md5, size, modified, storage):
 		self.relative_path = relative_path
-		self.ext_md5 = ext_md5
-		self.ext_size = size
+		self.md5 = md5
+		self.size = size
 		self.modified = modified
 		self.storage = storage
 
@@ -52,14 +52,13 @@ class S3:
 		for page in pages:
 			for obj in page['Contents']:
 				# Obj like: {'Key': '..62c1.csv.gz', 'LastModified': datetime.datetime(.), 'ETag': '"04a.."', 'Size': 20, 'StorageClass': 'STANDARD'}
-				parameters = {
-					"md5": obj.get('ETag')[1:-1],
-					"relative_path": obj.get('Key'),
-					"size": obj.get('Size'),
-					"modified": obj.get('LastModified'),
-					"storage": obj.get('StorageClass')
-				}
-				files[obj.get('Key')] = parameters
+				files[obj.get('Key')] = S3File(
+					relative_path=obj.get('Key'),
+					md5=obj.get('ETag')[1:-1],
+					size=obj.get('Size'),
+					modified=obj.get('LastModified'),
+					storage=obj.get('StorageClass')
+				)
 		print(" found {}".format(len(files)))
 		return files
 
@@ -94,29 +93,30 @@ class S3:
 			files[csv_row[1].strip('\"')] = row
 		return files
 
-	def download_single_file(self, s3_file_dict, local_file: LocalFile):
-		print(" Downloading file {} -> {} ...".format(s3_file_dict.get('relative_path'), local_file.path), end=' ')
+	def download_single_file(self, s3_file: S3File, local_file: LocalFile):
+		print(" Downloading file {} -> {} ...".format(s3_file.relative_path, local_file.path), end=' ')
+		if (self.dry_run):
+			print(" --DRY-RUN")
+			return
 		local_file.verify_folder_path()
-		self.client.download_file(self.bucket, s3_file_dict.get('relative_path'), local_file.path)
-		local_file.verify_md5(s3_file_dict.get('md5'))
+		self.client.download_file(self.bucket, s3_file.relative_path, local_file.path)
+		local_file.verify_md5(s3_file.md5)
 		print('--done-and-verified')
 
-	def upload_single_file(self, relative_path, full_path, md5):
-		print (" Uploading '{}' to '{}'....".format(relative_path, self.bucket), end='')
+	def upload_single_file(self, local_file: LocalFile): #relative_path, full_path, md5
+		print (" Uploading '{}' to '{}'....".format(local_file.relative_path, self.bucket), end='')
 		if self.dry_run:
 			print (" --DRY-RUN")
 			return
 		result = self.client.put_object(
-			Body = open(full_path, 'rb'),
+			Body = open(local_file.path, 'rb'),
 			Bucket = self.bucket,
-			Key = relative_path,
+			Key = local_file.relative_path,
 			StorageClass = self.storage,
 			ACL = self.acl
 			# ContentType=get_content_type_per_extension(file_extension),
 			# CacheControl=get_cache_control_per_extension(file_extension)
 		)
 		# Compare md5 (parameter) with 'ETag', if both are the same, we are good
-		if (md5 == result.get("ETag").strip('\"')):
-			print(" --md5-ok")
-		else:
-			print(" --md5-ERROR")
+		local_file.verify_md5(result.get("ETag").strip('\"'))
+
