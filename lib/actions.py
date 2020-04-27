@@ -26,6 +26,12 @@ ACTIONS['s3_download'] = {
 ACTIONS['backup_database'] = {
 	'mandatory_values': ['local-folder', 'mysql-host', 'mysql-port', 'mysql-user', 'mysql-pass', 'mysql-db'],
 }
+ACTIONS['mirror_server_to_local'] = {
+	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+}
+ACTIONS['mirror_local_to_server'] = {
+	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+}
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run

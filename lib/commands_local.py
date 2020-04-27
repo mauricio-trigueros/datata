@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import tempfile
 import subprocess
@@ -66,12 +67,12 @@ class Local:
 			com = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(origin_file.path, dest_file.path)
 			self.execute_command(com, origin_file, dest_file)
 
-	def exec(self, command, origin_file, dest_file):
+	def exec(self, command, origin_file: LocalFile, dest_file: LocalFile):
 		dest_file.verify_folder_path()
 		os.system(command)
 		dest_file.is_valid_or_die()		
 
-	def execute_command(self, command, origin_file, dest_file):
+	def execute_command(self, command, origin_file: LocalFile, dest_file: LocalFile):
 		print(" Running '{}' on '{}'...".format(command.split(' ')[0], origin_file.path), end=' ')
 		if self.dry_run:
 			print("--DRY-RUN")
@@ -91,26 +92,30 @@ class Local:
 		else:
 			print(' --output-file-exist-no-forcing SKIP!')
 
-	def print_size_reduction(self, origin_file, dest_file):
+	def print_size_reduction(self, origin_file: LocalFile, dest_file: LocalFile):
 		reduction = int ((dest_file.get_size() / origin_file.get_size()) * 100)
 		print ("--result-size-{}%".format(reduction))
 
 	def local_md5_files_iterator(self, local_path, prefix='.', extension='*'):
-		print("Getting local files iterator for path '{}' with prefix '{}' and extension '{}'".format(local_path, prefix, extension))
+		print("Getting local files iterator for path '{}' with prefix '{}' and extension '{}'...".format(local_path, prefix, extension), end=' ')
 		files = {}
-		command = "cd '"+local_path+"' && find "+prefix+" -type f -name '*."+extension+"' -exec md5 '{}' + | awk '{print $2 \" \" $4}'"
+		command = "cd '"+local_path+"' && find "+prefix+" -type f -name '*."+extension+"' -exec md5 '{}' +"
 		output = os.popen(command).readlines() # Mac OS
-		# Line like: MD5 (./2019/12/nasa0-320x240.jpg) = cb90cffaf3c3cb4504a381a66143d445, so with awk we select only
-		# (./2019/12/nasa0-320x240.jpg) and cb90cffaf3c3cb4504a381a66143d445
 		for line in output:  # or another encoding
-			# First column is path (./2019/12/nasa0-320x240.jpg), and second is MD5 cb90cffaf3c3cb4504a381a66143d445
-			path_temp,md5_temp = line.split()
-			relative_path = os.path.normpath(path_temp[1:-1]) # path_temp is like (./2019/12/nasa0-320x240.jpg), remove (./)
-			files[relative_path] = LocalFile(
-				path=os.path.normpath(os.path.join(local_path, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
-				relative_path=relative_path,
-				md5=md5_temp.rstrip()
-			)
+			# Line like: MD5 (./2019/12/nasa0-320x240.jpg) = cb90cffaf3c3cb4504a381a66143d445
+			re_md5 = re.search('\) = (.+?)$', line)
+			re_relpath = re.search('\(\.\/(.+?)\) =', line)
+			if re_md5 and re_relpath:
+				md5 = re_md5.group(1)
+				relative_path = re_relpath.group(1)
+				files[relative_path] = LocalFile(
+					path=os.path.normpath(os.path.join(local_path, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
+					relative_path=relative_path,
+					md5=md5
+				)
+			else:
+				raise Exception("Problem with line '{}' ".format(line))
+		print(" returned {} items".format(len(files)))
 		return files
 
 	def validate_local_folder_or_die(self, path):
@@ -118,6 +123,14 @@ class Local:
 			sys.exit("Local path {} do not exist".format(path))
 		else:
 			return path
+
+	def remove_file(self, local_file: LocalFile):
+		print(" Removing local file {}...".format(local_file.path), end=' ')
+		if self.dry_run:
+			print("--DRY-RUN")
+			return
+		os.remove(local_file.path)
+		print(" --done!")
 
 def get_temp_file(extension=None) -> LocalFile:
 	if(extension): 

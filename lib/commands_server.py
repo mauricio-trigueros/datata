@@ -1,3 +1,4 @@
+import re
 import os
 import hashlib
 import paramiko
@@ -71,18 +72,27 @@ class Server:
 		# It will list all the files in current directory and subdirectories, returning file path and file MD5
 		folderContent = self.client.execute("cd "+self.folder+" && find -type f -exec md5sum '{}' +")
 		for index, item in enumerate(folderContent):
-			md5_temp, path_temp = item.splitlines().pop().split()
-			relative_path = path_temp[2:] # path looks like "./antecesores.png", we need to remove first "./"
-			files[relative_path] = ServerFile(
-				ssh_client=self.client,
-				path=os.path.normpath(os.path.join(self.folder, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
-				relative_path=relative_path,
-				md5=md5_temp.rstrip()
-			)
+			line = item.splitlines().pop()
+			# Line looks like "1704abd3d2a4d445010c678b50464345  ./2014/myfile.png"
+			re_md5 = re.search('(.+?)  ', line)
+			re_relpath = re.search('\.\/(.+?)$', line)
+			if re_md5 and re_relpath:
+				md5 = re_md5.group(1)
+				relative_path = re_relpath.group(1)
+				#print(" Adding server file {} with {} ".format(relative_path, md5))
+				files[relative_path] = ServerFile(
+					ssh_client=self.client,
+					path=os.path.normpath(os.path.join(self.folder, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
+					relative_path=relative_path,
+					md5=md5
+				)
+			else:
+				raise Exception("Problem with line '{}' ".format(line))
 		return files
 
 	def download_file(self, server_file: ServerFile, local_file: LocalFile):
-		print(" Downloading file {} ...".format(server_file.relative_path), end=' ')
+		#print(" Downloading file {} ...".format(server_file.relative_path), end=' ')
+		print(" Downloading file '{}' -> '{}' ...".format(server_file.relative_path, local_file.path), end=' ')
 		if (self.dry_run):
 			print(" --DRY-RUN")
 			return
@@ -111,3 +121,11 @@ class Server:
 			print(' --OK')
 		else:
 			print(' --ERROR-WITH-MD5')
+
+	def remove_file(self, server_file: ServerFile):
+		print(" Removing server file {} ...".format(server_file.path), end=' ')
+		if self.dry_run:
+			print("--DRY-RUN")
+			return
+		self.__execute_command("rm '{}';echo $?".format(server_file.path))
+		print(' --done!')
