@@ -32,6 +32,9 @@ ACTIONS['mirror_server_to_local'] = {
 ACTIONS['mirror_local_to_server'] = {
 	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
 }
+ACTIONS['mirror_local_folders_by_name'] = {
+	'mandatory_values': ['local-folder', 'local-dest', 'dry-run'],
+}
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run

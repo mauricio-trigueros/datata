@@ -72,9 +72,33 @@ elif settings['action'] == 'mirror_local_to_server':
 		upload_file_path = os.path.join(settings['server'].folder, local_file.relative_path)
 		settings['server'].upload_file(local_file, ServerFile(settings['server'].client, upload_file_path))
 
+elif settings['action'] == 'mirror_local_folders_by_name':
+	print("Mirroring locals by name")
+	origin_files = settings['local'].local_md5_files_iterator(settings['local'].origin)
+	dest_files = settings['local'].local_md5_files_iterator(settings['local'].dest)
+
+	# We need to remove dest_files that are NOT in origin_files
+	to_remove = compare_only_missing(dest_files, origin_files, verbose=False)
+	for local_file in to_remove:
+		settings['local'].remove_file(local_file)
+
 elif settings['action'] == 'compress_local_images':
-	print("Compressing Local Images")
-	settings['local'].compress_jpg()
+	print("Mirroring locals by name")
+	origin_files = settings['local'].local_md5_files_iterator(settings['local'].origin)
+	dest_files = settings['local'].local_md5_files_iterator(settings['local'].dest)
+
+	target = origin_files.values() if settings['force'] else compare_only_missing(origin_files, dest_files, verbose=False)
+
+	for local_file in target:
+		print("  Compressing '{}' ... ".format(local_file.path), end=' ')
+		if settings['local'].dry_run:
+			print("--DRY-RUN")
+		else:	
+			dest_file = LocalFile("{}{}{}".format(settings['local'].dest, local_file.get_name(), local_file.get_extension()))
+			local_file.compress_png(dest_file)
+			local_file.compare_size(dest_file)
+			print("--DONE")
+
 elif settings['action'] == 's3_upload':
 	print("S3 upload!!!!")
 	inventory = settings['s3'].folder_iterator(settings['s3'].prefix)

@@ -4,6 +4,7 @@ import sys
 import tempfile
 import subprocess
 import hashlib
+import pathlib
 
 class LocalFile:
 	# Path may exist (yet) or not!
@@ -32,6 +33,13 @@ class LocalFile:
 	def get_size(self):
 		return os.path.getsize(self.path)
 
+	# Return file name without extension
+	def get_name(self):
+		return pathlib.Path(self.path).stem
+
+	def get_extension(self):
+		return pathlib.Path(self.path).suffix
+
 	def is_valid(self):
 		return (os.path.isfile(self.path) and os.path.getsize(self.path) > 0)
 
@@ -41,7 +49,7 @@ class LocalFile:
 
 	def compare_size(self, output_file):
 		reduction = int ((output_file.get_size() / self.get_size()) * 100)
-		print ("--result-size-{}%".format(reduction))
+		print ("--result-size-{}%".format(reduction), end=' ')
 
 	def tar(self, output_file):
 		print("  Compressing '{}' ... ".format(self.path), end=' ')
@@ -50,6 +58,16 @@ class LocalFile:
 		os.system(command)
 		self.compare_size(output_file)
 
+	def compress_png(self, output_file):
+		command = "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(output_file.path, self.path)
+		self.is_valid_or_die()
+		os.system(command)
+
+	def compress_jpg(self, output_file):
+		command = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(self.path, output_file.path)
+		self.is_valid_or_die()
+		os.system(command)
+
 class Local:
 	def __init__(self, force, dry_run, local_folder, dest_folder):
 		print("Creating Local for folder {}, force: {} and dry_run: {}".format(local_folder, force, dry_run))
@@ -57,44 +75,6 @@ class Local:
 		self.force = force
 		self.origin = self.validate_local_folder_or_die(local_folder)
 		self.dest = self.validate_local_folder_or_die(dest_folder)
-
-	def compress_jpg(self):
-		print("Compressing JPGs")
-		local_files = self.local_md5_files_iterator(self.origin, extension='jpg')
-		for re in local_files:
-			origin_file = LocalFile(local_files[re].get('full_path'))
-			dest_file   = LocalFile(os.path.join(self.dest, local_files[re].get('relative_path')))
-			com = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(origin_file.path, dest_file.path)
-			self.execute_command(com, origin_file, dest_file)
-
-	def exec(self, command, origin_file: LocalFile, dest_file: LocalFile):
-		dest_file.verify_folder_path()
-		os.system(command)
-		dest_file.is_valid_or_die()		
-
-	def execute_command(self, command, origin_file: LocalFile, dest_file: LocalFile):
-		print(" Running '{}' on '{}'...".format(command.split(' ')[0], origin_file.path), end=' ')
-		if self.dry_run:
-			print("--DRY-RUN")
-			return
-
-		if not dest_file.is_valid():
-			print(' --no-output-file... ', end=' ')
-			self.exec(command, origin_file, dest_file)
-			self.print_size_reduction(origin_file, dest_file)
-			return
-		
-		# Dest_file exist, check we should force it or not
-		if self.force:
-			print(' --overwritting... ', end=' ')
-			self.exec(command, origin_file, dest_file)
-			self.print_size_reduction(origin_file, dest_file)
-		else:
-			print(' --output-file-exist-no-forcing SKIP!')
-
-	def print_size_reduction(self, origin_file: LocalFile, dest_file: LocalFile):
-		reduction = int ((dest_file.get_size() / origin_file.get_size()) * 100)
-		print ("--result-size-{}%".format(reduction))
 
 	def local_md5_files_iterator(self, local_path, prefix='.', extension='*'):
 		print("Getting local files iterator for path '{}' with prefix '{}' and extension '{}'...".format(local_path, prefix, extension), end=' ')
