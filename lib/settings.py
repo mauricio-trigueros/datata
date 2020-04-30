@@ -1,10 +1,10 @@
 import sys
 import getopt
 
-from lib.commands_s3 import S3
-from lib.commands_server import Server
-from lib.commands_local import Local
-from lib.commands_mysql import Mysql
+from lib.commands_s3 import S3Client
+from lib.commands_server import ServerClient
+from lib.commands_local import LocalClient
+from lib.commands_mysql import MysqlClient
 
 ACTIONS = {}
 
@@ -127,7 +127,7 @@ def parse_settings(raw_settings):
 
 	# Local settings
 	if set(('local-folder',)).issubset(raw_settings):
-		local = Local(
+		local = LocalClient(
 			dry_run=settings['dry-run'],
 			force=settings['force'],
 			local_folder=raw_settings['local-folder'],
@@ -138,7 +138,7 @@ def parse_settings(raw_settings):
 	# S3 settings
 	if set(('s3-bucket','s3-key','s3-secret')).issubset(raw_settings):
 		print("Creating S3..")
-		s3_class = S3(
+		s3_class = S3Client(
 			settings['dry-run'],
 			raw_settings['s3-bucket'],
 			raw_settings['s3-key'],
@@ -151,7 +151,7 @@ def parse_settings(raw_settings):
 
 	# Create SSH client (if need it)
 	if set(("serv-url","serv-user","serv-key")).issubset(raw_settings):
-		ssh_client = Server(
+		ssh_client = ServerClient(
 			settings['dry-run'],
 			raw_settings['serv-url'], 
 			raw_settings['serv-user'], 
@@ -162,7 +162,7 @@ def parse_settings(raw_settings):
 
 	# MySQL settings
 	if set(("mysql-host","mysql-port","mysql-user","mysql-pass","mysql-db")).issubset(raw_settings):
-		mysql_client = Mysql(
+		mysql_client = MysqlClient(
 			raw_settings['mysql-host'],
 			raw_settings['mysql-port'],
 			raw_settings['mysql-user'],

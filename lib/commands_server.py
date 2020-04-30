@@ -45,7 +45,7 @@ class ServerFile:
 			command = "md5sum '"+self.path+"' | awk '{print $1}'"
 			return self.__execute_command(command)
 
-class Server:
+class ServerClient:
 
 	def __execute_command(self, command):
 		execution = self.client.execute(command)

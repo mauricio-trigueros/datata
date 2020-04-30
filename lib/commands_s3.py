@@ -16,7 +16,7 @@ class S3File:
 		self.modified = modified
 		self.storage = storage
 
-class S3:
+class S3Client:
 	# For a given key, bucket and secret, it tries to create a connection to this bucket.
 	# If succed, returns a boto client object.
 	# If false, returns false.

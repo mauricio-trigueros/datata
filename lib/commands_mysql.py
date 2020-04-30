@@ -3,7 +3,7 @@ from shlex import quote
 from datetime import datetime
 from lib.commands_local import LocalFile
 
-class Mysql:
+class MysqlClient:
 
 	def __init__(self, host, port, user, pwd, db):
 		self.host = host

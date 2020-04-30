@@ -68,7 +68,7 @@ class LocalFile:
 		self.is_valid_or_die()
 		os.system(command)
 
-class Local:
+class LocalClient:
 	def __init__(self, force, dry_run, local_folder, dest_folder):
 		print("  Creating Local for:\n    folder '{}'\n    force: '{}'\n    dry_run: '{}'".format(local_folder, force, dry_run))
 		self.dry_run = dry_run

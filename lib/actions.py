@@ -1,10 +1,10 @@
 from lib.comparators import compare_file_dicts, compare_only_missing, compare_only_different
-from lib.commands_local import Local, LocalFile, get_temp_file
-from lib.commands_server import Server, ServerFile
-from lib.commands_s3 import S3
-from lib.commands_mysql import Mysql
+from lib.commands_local import LocalClient, LocalFile, get_temp_file
+from lib.commands_server import ServerClient, ServerFile
+from lib.commands_s3 import S3Client
+from lib.commands_mysql import MysqlClient
 
-def compress_local_images(localClient: Local):
+def compress_local_images(localClient: LocalClient):
 	origin_files = localClient.local_md5_files_iterator(localClient.origin)
 	dest_files = localClient.local_md5_files_iterator(localClient.dest)
 
@@ -20,7 +20,7 @@ def compress_local_images(localClient: Local):
 			local_file.compare_size(dest_file)
 			print("--DONE")
 
-def mirror_local_folders_by_name(localClient: Local):
+def mirror_local_folders_by_name(localClient: LocalClient):
 	origin_files = localClient.local_md5_files_iterator(localClient.origin)
 	dest_files = localClient.local_md5_files_iterator(localClient.dest)
 
@@ -29,7 +29,7 @@ def mirror_local_folders_by_name(localClient: Local):
 	for local_file in to_remove:
 		localClient.remove_file(local_file)	
 
-def download_from_server_to_local(serverClient: Server, localClient: Local):
+def download_from_server_to_local(serverClient: ServerClient, localClient: LocalClient):
 	remote_files = serverClient.md5_files_iterator()
 	local_files = localClient.local_md5_files_iterator(localClient.origin)
 	to_download = compare_file_dicts(remote_files, local_files)
@@ -37,7 +37,7 @@ def download_from_server_to_local(serverClient: Server, localClient: Local):
 		downloaded_file = LocalFile(os.path.join(localClient.origin, server_file.relative_path))
 		serverClient.download_file(server_file, downloaded_file)
 
-def upload_from_local_to_server(serverClient: Server, localClient: Local):
+def upload_from_local_to_server(serverClient: ServerClient, localClient: LocalClient):
 	remote_files = serverClient.md5_files_iterator()
 	local_files = localClient.local_md5_files_iterator(localClient.origin)
 	to_upload = compare_file_dicts(local_files, remote_files)
@@ -45,7 +45,7 @@ def upload_from_local_to_server(serverClient: Server, localClient: Local):
 		uploaded_file = ServerFile(serverClient.client, os.path.join(serverClient.folder, local_file.relative_path))
 		serverClient.upload_file(local_file, uploaded_file)
 
-def mirror_server_to_local(serverClient: Server, localClient: Local):
+def mirror_server_to_local(serverClient: ServerClient, localClient: LocalClient):
 	remote_files = serverClient.md5_files_iterator()
 	local_files = localClient.local_md5_files_iterator(localClient.origin)
 	
@@ -67,7 +67,7 @@ def mirror_server_to_local(serverClient: Server, localClient: Local):
 		local_file_path = os.path.join(localClient.origin, server_file.relative_path)
 		serverClient.download_file(server_file, LocalFile(local_file_path))
 
-def mirror_local_to_server(serverClient: Server, localClient: Local):
+def mirror_local_to_server(serverClient: ServerClient, localClient: LocalClient):
 	remote_files = serverClient.md5_files_iterator()
 	local_files = localClient.local_md5_files_iterator(localClient.origin)
 
@@ -89,14 +89,14 @@ def mirror_local_to_server(serverClient: Server, localClient: Local):
 		upload_file_path = os.path.join(serverClient.folder, local_file.relative_path)
 		serverClient.upload_file(local_file, ServerFile(serverClient.client, upload_file_path))
 
-def s3_upload(s3client: S3, localClient: Local):
+def s3_upload(s3client: S3Client, localClient: LocalClient):
 	inventory = s3client.folder_iterator(s3client.prefix)
 	local_files = localClient.local_md5_files_iterator(localClient.origin, prefix=s3client.prefix)
 	to_upload = compare_file_dicts(local_files, inventory, verbose=True)
 	for local_file in to_upload:
 	 	s3client.upload_single_file(local_file)
 
-def s3_download(s3client: S3, localClient: Local):
+def s3_download(s3client: S3Client, localClient: LocalClient):
 	inventory = s3client.folder_iterator(s3client.prefix)
 	local_files = localClient.local_md5_files_iterator(localClient.origin, prefix=s3client.prefix) 
 	to_download = compare_file_dicts(inventory, local_files, verbose=True)
@@ -104,6 +104,6 @@ def s3_download(s3client: S3, localClient: Local):
 		local_file = LocalFile(os.path.join(localClient.origin, s3_file.relative_path))
 		s3client.download_single_file(s3_file, local_file)
 
-def backup_database(mysqlClient: Mysql, localClient: Local):
+def backup_database(mysqlClient: MysqlClient, localClient: LocalClient):
 	db_dump = mysqlClient.dump_database(localClient.origin)
 	db_dump.tar(LocalFile(db_dump.path+'.tar.bz2'))
