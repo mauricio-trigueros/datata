@@ -10,30 +10,39 @@ ACTIONS = {}
 
 ACTIONS['download_from_server_to_local'] = {
 	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'description': 'Downloading content from server to local...'
 }
 ACTIONS['upload_from_local_to_server'] = {
 	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'description': 'Uploading files from local to server...'
 }
 ACTIONS['compress_local_images'] = {
 	'mandatory_values': ['local-folder', 'local-dest', 'force', 'dry-run'],
+	'description': 'Compressing local images...'
 }
 ACTIONS['s3_upload'] = {
 	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
+	'description': 'Uploading files to S3...'
 }
 ACTIONS['s3_download'] = {
 	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
+	'description': 'Downloading files from S3...'
 }
 ACTIONS['backup_database'] = {
 	'mandatory_values': ['local-folder', 'mysql-host', 'mysql-port', 'mysql-user', 'mysql-pass', 'mysql-db'],
+	'description': 'Backing up database...'
 }
 ACTIONS['mirror_server_to_local'] = {
 	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'description': 'Mirroring server to local...'
 }
 ACTIONS['mirror_local_to_server'] = {
 	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'description': 'Mirroring local to server...'
 }
 ACTIONS['mirror_local_folders_by_name'] = {
 	'mandatory_values': ['local-folder', 'local-dest', 'dry-run'],
+	'description': 'Mirroring local folders by name...'
 }
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
@@ -96,6 +105,8 @@ def settings():
 			print ("missing!!")
 			sys.exit("Mandatory field '{}' not found".format(field))
 
+	raw_settings['description'] = action.get('description')
+
 	return parse_settings(raw_settings)
 
 def parse_settings(raw_settings):
@@ -104,6 +115,7 @@ def parse_settings(raw_settings):
 
 	# Action is always mandatory
 	settings['action'] = raw_settings['action']
+	settings['description'] = raw_settings['description']
 
 	# Dry run is not mandatory (for example, to list a bucket content)
 	settings['dry-run'] = False if raw_settings.get('dry-run', 'True').lower() in ("no", "false", False) else True

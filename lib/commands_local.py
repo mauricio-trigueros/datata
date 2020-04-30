@@ -70,7 +70,7 @@ class LocalFile:
 
 class Local:
 	def __init__(self, force, dry_run, local_folder, dest_folder):
-		print("Creating Local for folder {}, force: {} and dry_run: {}".format(local_folder, force, dry_run))
+		print("  Creating Local for:\n    folder '{}'\n    force: '{}'\n    dry_run: '{}'".format(local_folder, force, dry_run))
 		self.dry_run = dry_run
 		self.force = force
 		self.origin = self.validate_local_folder_or_die(local_folder)
