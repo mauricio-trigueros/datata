@@ -8,12 +8,16 @@ from lib.commands_mysql import MysqlClient
 
 ACTIONS = {}
 
+server = ['serv-url','serv-user','serv-key','serv-folder']
+s3     = ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage']
+mysql  = ['mysql-host', 'mysql-port', 'mysql-user', 'mysql-pass', 'mysql-db']
+
 ACTIONS['download_from_server_to_local'] = {
-	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'mandatory_values': server + ['local-folder','dry-run'],
 	'description': 'Downloading content from server to local...'
 }
 ACTIONS['upload_from_local_to_server'] = {
-	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'mandatory_values': server + ['local-folder','dry-run'],
 	'description': 'Uploading files from local to server...'
 }
 ACTIONS['compress_local_images'] = {
@@ -21,23 +25,23 @@ ACTIONS['compress_local_images'] = {
 	'description': 'Compressing local images...'
 }
 ACTIONS['s3_upload'] = {
-	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
+	'mandatory_values': s3 + ['dry-run'],
 	'description': 'Uploading files to S3...'
 }
 ACTIONS['s3_download'] = {
-	'mandatory_values': ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 'dry-run'],
+	'mandatory_values': s3 + ['dry-run'],
 	'description': 'Downloading files from S3...'
 }
 ACTIONS['backup_database'] = {
-	'mandatory_values': ['local-folder', 'mysql-host', 'mysql-port', 'mysql-user', 'mysql-pass', 'mysql-db'],
+	'mandatory_values': mysql + ['local-folder'],
 	'description': 'Backing up database...'
 }
 ACTIONS['mirror_server_to_local'] = {
-	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'mandatory_values': server + ['local-folder','dry-run'],
 	'description': 'Mirroring server to local...'
 }
 ACTIONS['mirror_local_to_server'] = {
-	'mandatory_values': ['serv-url','serv-user','serv-key','serv-folder', 'local-folder','dry-run'],
+	'mandatory_values': server + ['local-folder','dry-run'],
 	'description': 'Mirroring local to server...'
 }
 ACTIONS['mirror_local_folders_by_name'] = {
