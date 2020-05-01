@@ -76,12 +76,12 @@ class LocalClient:
 		self.origin = self.validate_local_folder_or_die(local_folder)
 		self.dest = self.validate_local_folder_or_die(dest_folder)
 
-	def local_md5_files_iterator(self, local_path, prefix='.', extension='*'):
-		print("Getting local files iterator for path '{}' with prefix '{}' and extension '{}'...".format(local_path, prefix, extension), end=' ')
+	def md5_files_iterator(self, local_path, prefix='.', extension='*'):
+		print("Getting MD5 iterator for path '{}' with prefix '{}' and extension '{}'...".format(local_path, prefix, extension), end=' ')
 		files = {}
 		command = "cd '"+local_path+"' && find "+prefix+" -type f -name '*."+extension+"' -exec md5 '{}' +"
 		output = os.popen(command).readlines() # Mac OS
-		for line in output:  # or another encoding
+		for line in output:
 			# Line like: MD5 (./2019/12/nasa0-320x240.jpg) = cb90cffaf3c3cb4504a381a66143d445
 			re_md5 = re.search('\) = (.+?)$', line)
 			re_relpath = re.search('\(\.\/(.+?)\) =', line)
@@ -98,6 +98,21 @@ class LocalClient:
 		print(" returned {} items".format(len(files)))
 		return files
 
+	def files_iterator(self, local_path, prefix='.', extension='*'):
+		print("Getting iterator for path '{}' with prefix '{}' and extension '{}'...".format(local_path, prefix, extension), end=' ')
+		files = {}
+		command = "cd '"+local_path+"' && find "+prefix+" -type f -name '*."+extension+"'"
+		output = os.popen(command).readlines() # Mac OS
+		for line in output:
+			# Line like: ./agema-o-guardia-real-150x150.png
+			relative_path = line[2:].rstrip()
+			files[relative_path] = LocalFile(
+				path=os.path.normpath(os.path.join(local_path, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
+				relative_path=relative_path
+			)
+		print(" returned {} items".format(len(files)))
+		return files
+
 	def validate_local_folder_or_die(self, path):
 		if not os.path.exists(path):
 			sys.exit("Local path {} do not exist".format(path))
@@ -105,12 +120,11 @@ class LocalClient:
 			return path
 
 	def remove_file(self, local_file: LocalFile):
-		print(" Removing local file {}...".format(local_file.path), end=' ')
-		if self.dry_run:
-			print("--DRY-RUN")
-			return
-		os.remove(local_file.path)
-		print(" --done!")
+		print(" Removing local file {} ...".format(local_file.path), end=' ')
+		if self.dry_run: print("--DRY-RUN")
+		else:
+			os.remove(local_file.path)
+			print(" --done!")
 
 def get_temp_file(extension=None) -> LocalFile:
 	if(extension): 
