@@ -5,6 +5,9 @@ import tempfile
 import subprocess
 import hashlib
 import pathlib
+import subprocess
+from shutil import copyfile
+from subprocess import PIPE
 
 class LocalFile:
 	# Path may exist (yet) or not!
@@ -40,8 +43,18 @@ class LocalFile:
 	def get_extension(self):
 		return pathlib.Path(self.path).suffix
 
+	def is_image(self):
+		extension = self.get_extension().lower()
+		if extension in ['.png', '.jpg', '.jpeg', '.gif']: return True
+		else: return False
+
 	def is_valid(self):
-		return (os.path.isfile(self.path) and os.path.getsize(self.path) > 0)
+		valid = os.path.isfile(self.path)
+		size = os.path.getsize(self.path) > 0
+		# if valid: print(' --file-valid', end=' ')
+		# if size: print(' --file-size-ok', end=' ')
+		return valid and size
+		#return (os.path.isfile(self.path) and os.path.getsize(self.path) > 0)
 
 	def is_valid_or_die(self):
 		if not self.is_valid():
@@ -59,14 +72,30 @@ class LocalFile:
 		self.compare_size(output_file)
 
 	def compress_png(self, output_file):
-		command = "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}'".format(output_file.path, self.path)
+		command = "pngquant --force --skip-if-larger --quality 40-90 --speed 1 --output '{}' '{}' --verbose".format(output_file.path, self.path)
 		self.is_valid_or_die()
-		os.system(command)
+		result = subprocess.run(command, stdout=PIPE, stderr=PIPE, shell=True)
+		print('--compressing-png', end=' ')
+		# If we can not compress the PNG (bigger size, compression out of ranges, ...)
+		# then we need to copy the original image, since we always need an output file
+		if 'Skipped 1 file out of a total of 1 file.' in str(result.stderr):
+			print('--skipped', end=' ')
+			copyfile(self.path, output_file.path)
+		else:
+			print('--done', end=' ')
+		output_file.is_valid_or_die()
 
 	def compress_jpg(self, output_file):
 		command = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(self.path, output_file.path)
 		self.is_valid_or_die()
 		os.system(command)
+		output_file.is_valid_or_die()
+
+	def compress_gif(self, output_file):
+		command = "gifsicle -O3 --lossy=80 -o '{}' '{}'".format(output_file.path, self.path)
+		self.is_valid_or_die()
+		os.system(command)
+		output_file.is_valid_or_die()
 
 class LocalClient:
 	def __init__(self, force, dry_run, local_folder, dest_folder):

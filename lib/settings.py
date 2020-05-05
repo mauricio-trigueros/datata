@@ -48,6 +48,11 @@ ACTIONS['mirror_local_folders_by_name'] = {
 	'mandatory_values': ['local-folder', 'local-dest', 'dry-run'],
 	'description': 'Mirroring local folders by name...'
 }
+ACTIONS['compare_local_folders'] = {
+	'mandatory_values': ['local-folder', 'local-dest'],
+	'description': 'Compares two local folders'
+}
+
 ALLOWED_PARAMETERS = [
 	"action",    # Name of the command we want to execute (from commands.py)
 	"dry-run",    # Boolean, to indicate if we must execute command or just dry-run

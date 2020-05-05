@@ -1,4 +1,5 @@
 import os
+import sys
 from lib.comparators import compare_file_dicts, compare_only_missing, compare_only_different
 from lib.commands_local import LocalClient, LocalFile, get_temp_file
 from lib.commands_server import ServerClient, ServerFile
@@ -6,20 +7,46 @@ from lib.commands_s3 import S3Client
 from lib.commands_mysql import MysqlClient
 
 def compress_local_images(localClient: LocalClient):
-	origin_files = localClient.md5_files_iterator(localClient.origin)
-	dest_files = localClient.md5_files_iterator(localClient.dest)
+	# First compress PNG files
+	origin_files = localClient.files_iterator(localClient.origin) # Example, iterator for /home/user/a/
+	dest_files = localClient.files_iterator(localClient.dest)     # Example, iterator for /home/user/b/
 
 	target = origin_files.values() if localClient.force else compare_only_missing(origin_files, dest_files, verbose=False)
 
+	print("Compressing {} images".format(len(target)))
+
 	for local_file in target:
+		# local_file.path can be /home/user/a/1/alfa.png and we want /home/user/b/1/alfa.png
+		dest_file = LocalFile(local_file.path.replace(localClient.origin, localClient.dest))
 		print("  Compressing '{}' ... ".format(local_file.path), end=' ')
-		if localClient.dry_run:
-			print("--DRY-RUN")
-		else:	
-			dest_file = LocalFile("{}{}{}".format(localClient.dest, local_file.get_name(), local_file.get_extension()))
-			local_file.compress_png(dest_file)
+		if local_file.is_image():
+			print('--image ', end=' ')
+			if localClient.dry_run:
+				print('--DRY-RUN')
+				continue
+			extension = local_file.get_extension().lower()
+			if extension in ['.gif']:            local_file.compress_gif(dest_file)
+			elif extension in ['.jpg', '.jpeg']: local_file.compress_jpg(dest_file)
+			elif extension in ['.png']:          local_file.compress_png(dest_file)
+			else: raise Exception("File {} with extension {} not handled ".format(local_file.path, extension))
 			local_file.compare_size(dest_file)
-			print("--DONE")
+		else:
+			print('--no-image', end=' ')
+		print("")
+
+def compare_local_folders(localClient: LocalClient):
+	origin_files = localClient.files_iterator(localClient.origin)
+	dest_files = localClient.files_iterator(localClient.dest)
+
+	only_origin = compare_only_missing(origin_files, dest_files, verbose=False)
+	print(" {} items are ONLY in {}".format(len(only_origin), localClient.origin))
+	for local_file_origin in only_origin:
+		print(local_file_origin.path)
+
+	only_dest = compare_only_missing(dest_files, origin_files, verbose=False)
+	print(" {} items are ONLY in {}".format(len(only_dest), localClient.dest))
+	for local_file_dest in only_dest:
+		print(local_file_dest.path)
 
 def mirror_local_folders_by_name(localClient: LocalClient):
 	origin_files = localClient.files_iterator(localClient.origin)
