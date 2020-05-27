@@ -24,29 +24,41 @@ def compress_local_images(localClient: LocalClient):
 			if localClient.dry_run:
 				print('--DRY-RUN')
 				continue
-			extension = local_file.get_extension().lower()
-			if extension in ['.gif']:            local_file.compress_gif(dest_file)
-			elif extension in ['.jpg', '.jpeg']: local_file.compress_jpg(dest_file)
-			elif extension in ['.png']:          local_file.compress_png(dest_file)
-			else: raise Exception("File {} with extension {} not handled ".format(local_file.path, extension))
+			local_file_type = local_file.get_type_by_extension()
+			dest_file.verify_folder_path()
+			if   local_file_type == 'gif':   local_file.compress_gif(dest_file)
+			elif local_file_type == 'jpeg': local_file.compress_jpg(dest_file)
+			elif local_file_type == 'png':  local_file.compress_png(dest_file)
+			else: raise Exception("File {} with type {} not handled ".format(local_file.path, local_file_type))
 			local_file.compare_size(dest_file)
 		else:
 			print('--no-image', end=' ')
 		print("")
 
-def compare_local_folders(localClient: LocalClient):
+def compare_local_image_folders(localClient: LocalClient):
 	origin_files = localClient.files_iterator(localClient.origin)
 	dest_files = localClient.files_iterator(localClient.dest)
 
-	only_origin = compare_only_missing(origin_files, dest_files, verbose=False)
-	print(" {} items are ONLY in {}".format(len(only_origin), localClient.origin))
-	for local_file_origin in only_origin:
-		print(local_file_origin.path)
-
-	only_dest = compare_only_missing(dest_files, origin_files, verbose=False)
-	print(" {} items are ONLY in {}".format(len(only_dest), localClient.dest))
-	for local_file_dest in only_dest:
-		print(local_file_dest.path)
+	for local_file in origin_files.values():
+		dest_file = LocalFile(local_file.path.replace(localClient.origin, localClient.dest))
+		print("Checking {} ...".format(local_file.path), end=' ')
+		if local_file.is_valid():
+			print('--origin-valid', end=' ')
+			if local_file.is_image():
+				print('--image', end=' ')
+				local_file.is_valid_image_type()
+		else:
+			print('--ERROR-origin-not-valid', end=' ')
+		if dest_file.is_valid():
+			print('--destination-valid', end=' ')
+			if dest_file.is_image():
+				print('--image', end=' ')
+				local_file.is_valid_image_type()
+				local_file.compare_size(dest_file)
+				local_file.compare_image_hash(dest_file)
+		else:
+			print('--ERROR-missing-destination!', end=' ')
+		print('')
 
 def mirror_local_folders_by_name(localClient: LocalClient):
 	origin_files = localClient.files_iterator(localClient.origin)
