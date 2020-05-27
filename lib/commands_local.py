@@ -6,6 +6,9 @@ import subprocess
 import hashlib
 import pathlib
 import subprocess
+import imagehash
+import imghdr
+from PIL import Image, UnidentifiedImageError
 from shutil import copyfile
 from subprocess import PIPE
 
@@ -40,21 +43,50 @@ class LocalFile:
 	def get_name(self):
 		return pathlib.Path(self.path).stem
 
+	# Return file extension, like '.gif'
 	def get_extension(self):
-		return pathlib.Path(self.path).suffix
+		return pathlib.Path(self.path).suffix[1:]
 
-	def is_image(self):
+	# Return type (MIME) based on extension, like 'jpeg' or 'gif'
+	# Mime 'jpeg' can have different file extensions: .jpg, .jpeg, .jfif, .pjpeg, .pjp
+	def get_type_by_extension(self):
 		extension = self.get_extension().lower()
-		if extension in ['.png', '.jpg', '.jpeg', '.gif']: return True
+		if extension in ['jpg', 'jpeg', 'jfif', 'pjpeg', 'pjp']: return 'jpeg'
+		elif extension in ['png', 'gif', 'pdf', 'zip']: return extension
+		else:
+			return 'unknown'
+			#raise Exception("Unknown type for file {}".format(self.path))
+
+	# https://github.com/JohannesBuchner/imagehash/blob/master/imagehash.py
+	def get_image_hash(self, file_path):
+		return imagehash.average_hash(Image.open(file_path))
+
+	# Return image type like: 'gif', 'jpeg', 'png' ...
+	# https://docs.python.org/3.4/library/imghdr.html
+	def get_image_type(self):
+		return imghdr.what(self.path)
+
+	def is_valid_image_type(self):
+		image_type = imghdr.what(self.path) # like 'gif'
+		extension_type = self.get_type_by_extension() # like 'gif'
+		if image_type == extension_type:
+			print("--valid-image-type", end=' ')
+		else:
+			print("--ERROR-no-valid-type (image type: {} extension type: {})".format(image_type, extension_type), end=' ')
+
+	# Usually we need to know if file is an image, to compress it, so we only acknowledge image types we can work with.
+	def is_image(self):
+		file_type = self.get_type_by_extension()
+		if file_type in ['png', 'jpeg', 'gif']: return True
 		else: return False
 
 	def is_valid(self):
-		valid = os.path.isfile(self.path)
-		size = os.path.getsize(self.path) > 0
-		# if valid: print(' --file-valid', end=' ')
-		# if size: print(' --file-size-ok', end=' ')
+		try:
+			valid = os.path.isfile(self.path)
+			size = os.path.getsize(self.path) > 0
+		except FileNotFoundError:
+			return False
 		return valid and size
-		#return (os.path.isfile(self.path) and os.path.getsize(self.path) > 0)
 
 	def is_valid_or_die(self):
 		if not self.is_valid():
@@ -63,6 +95,18 @@ class LocalFile:
 	def compare_size(self, output_file):
 		reduction = int ((output_file.get_size() / self.get_size()) * 100)
 		print ("--result-size-{}%".format(reduction), end=' ')
+		if reduction > 100:
+			print("--ERROR-IMG-SIZE", end=' ')
+
+	def compare_image_hash(self, output_file):
+		try:
+			origin_hash = self.get_image_hash(self.path)
+			output_hash = self.get_image_hash(output_file.path)
+			print("--img-hash-diff--{}".format((origin_hash - output_hash)), end=' ')
+			if (origin_hash - output_hash) > 8:
+				print("--ERROR-IMG-HASH", end=' ')
+		except UnidentifiedImageError:
+			print("--ERROR-IMG-HAS --format-not-valid", end=' ')
 
 	def tar(self, output_file):
 		print("  Compressing '{}' ... ".format(self.path), end=' ')
@@ -81,14 +125,27 @@ class LocalFile:
 		if 'Skipped 1 file out of a total of 1 file.' in str(result.stderr):
 			print('--skipped', end=' ')
 			copyfile(self.path, output_file.path)
+		elif 'There were errors quantizing 1 file out of a total of 1 file' in str(result.stderr):
+			print('--skipped-not-png', end=' ')
+			copyfile(self.path, output_file.path)
 		else:
 			print('--done', end=' ')
 		output_file.is_valid_or_die()
 
 	def compress_jpg(self, output_file):
-		command = "jpegoptim --strip-all --all-progressive --max=80 --quiet --preserve --stdout '{}' > '{}'".format(self.path, output_file.path)
+		command = "jpegoptim --strip-all --all-progressive --max=80 --verbose --preserve --stdout '{}' > '{}'".format(self.path, output_file.path)
 		self.is_valid_or_die()
-		os.system(command)
+		result = subprocess.run(command, stdout=PIPE, stderr=PIPE, shell=True)
+		print('--compressing-jpg', end=' ')
+		#print(result)
+		if 'skipped' in str(result.stderr):
+			print('--skipped', end=' ')
+			copyfile(self.path, output_file.path)
+		if 'Not a JPEG file' in str(result.stderr):
+			print('--skipped-not-jpg', end=' ')
+			copyfile(self.path, output_file.path)
+		else:
+			print('--done', end=' ')
 		output_file.is_valid_or_die()
 
 	def compress_gif(self, output_file):

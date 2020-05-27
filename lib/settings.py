@@ -48,7 +48,7 @@ ACTIONS['mirror_local_folders_by_name'] = {
 	'mandatory_values': ['local-folder', 'local-dest', 'dry-run'],
 	'description': 'Mirroring local folders by name...'
 }
-ACTIONS['compare_local_folders'] = {
+ACTIONS['compare_local_image_folders'] = {
 	'mandatory_values': ['local-folder', 'local-dest'],
 	'description': 'Compares two local folders'
 }
