@@ -66,6 +66,24 @@ class LocalFile:
 	def get_image_type(self):
 		return imghdr.what(self.path)
 
+	def get_mime(self):
+		image_type = self.get_image_type()
+		if   image_type is 'png':    return "image/png"
+		elif image_type is 'jpeg':   return "image/jpeg"
+		elif image_type is 'gif':    return "image/gif"
+		else: return "binary/octet-stream"
+
+	def get_cache(self):
+		file_extension = self.get_extension()
+		if file_extension in ['woff']:
+			return "public ,max-age= 2628000" # 1 month
+		if file_extension in ['js','css']:
+			return "public ,max-age= 2628000" # 1 week
+		if file_extension in ['jpeg','jpg','jpe','bmp','json','svg','html', 'png']:
+			return "public ,max-age= 2628000" # 1 day
+		else:
+			return "public"
+
 	def is_valid_image_type(self):
 		image_type = imghdr.what(self.path) # like 'gif'
 		extension_type = self.get_type_by_extension() # like 'gif'
@@ -184,15 +202,19 @@ class LocalClient:
 		print(" returned {} items".format(len(files)))
 		return files
 
-	def files_iterator(self, local_path, prefix='.', extension='*'):
-		print("Getting iterator for path '{}' with prefix '{}' and extension '{}'...".format(local_path, prefix, extension), end=' ')
+	# If we need an iterator to compare with an s3 bucket, this is the scenario:
+	# - File iterator for local will be: myone.png, mytwo.png, ...
+	# - S3 iterator would be my/s3/folder/myfile.png, where "my/s3/folder/" is the s3prefix
+	# In order to compare both dictionaries, the iterator for local will need to add the s3prefix
+	def files_iterator(self, local_path, prefix='.', extension='*', s3prefix=''):
+		print("Iterator for '{}' with prefix '{}' and extension '{}' and s3pref '{}'...".format(local_path, prefix, extension, s3prefix), end=' ')
 		files = {}
 		command = "cd '"+local_path+"' && find "+prefix+" -type f -name '*."+extension+"'"
 		output = os.popen(command).readlines() # Mac OS
 		for line in output:
-			# Line like: ./agema-o-guardia-real-150x150.png
-			relative_path = line[2:].rstrip()
-			files[relative_path] = LocalFile(
+			# Line like: ./agema-o-guardia-real-150x150.png or a/b/agema-o-guardia-real-150x150.png
+			relative_path = line[2:].rstrip() if line.startswith('./') else line.rstrip()
+			files[s3prefix+relative_path] = LocalFile(
 				path=os.path.normpath(os.path.join(local_path, relative_path)), # like /home/you/files/2019/12/nasa0-320x240.jpg
 				relative_path=relative_path
 			)

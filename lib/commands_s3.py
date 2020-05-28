@@ -9,12 +9,16 @@ from lib.commands_local import LocalFile
 from lib.commands_local import get_temp_file
 
 class S3File:
+
 	def __init__(self, relative_path, md5, size, modified, storage):
 		self.relative_path = relative_path
 		self.md5 = md5
 		self.size = size
 		self.modified = modified
 		self.storage = storage
+
+	def get_md5(self):
+		return self.md5
 
 class S3Client:
 	# For a given key, bucket and secret, it tries to create a connection to this bucket.
@@ -46,6 +50,7 @@ class S3Client:
 		self.acl = self.__validate_parameter('acl', s3_acl, ['private', 'public-read'])
 
 	def folder_iterator(self, s3_folder):
+		print("Iterating S3 folder '{}'... ".format(s3_folder), end=' ')
 		paginator = self.client.get_paginator('list_objects_v2')
 		pages = paginator.paginate(Bucket=self.bucket, MaxKeys=500, StartAfter=s3_folder, Prefix=s3_folder)
 		files = {}
@@ -104,19 +109,21 @@ class S3Client:
 		print('--done-and-verified')
 
 	def upload_single_file(self, local_file: LocalFile): #relative_path, full_path, md5
-		print (" Uploading '{}' to '{}'....".format(local_file.relative_path, self.bucket), end='')
+		s3_key = os.path.join(self.prefix, local_file.relative_path)
+		print (" Uploading '{}' to '{}' ...".format(local_file.relative_path, s3_key), end=' ')
 		if self.dry_run:
 			print (" --DRY-RUN")
 			return
 		result = self.client.put_object(
 			Body = open(local_file.path, 'rb'),
 			Bucket = self.bucket,
-			Key = local_file.relative_path,
+			Key = s3_key,
 			StorageClass = self.storage,
-			ACL = self.acl
-			# ContentType=get_content_type_per_extension(file_extension),
-			# CacheControl=get_cache_control_per_extension(file_extension)
+			ACL = self.acl,
+			ContentType = local_file.get_mime(),
+			CacheControl= local_file.get_cache()
 		)
 		# Compare md5 (parameter) with 'ETag', if both are the same, we are good
 		local_file.verify_md5(result.get("ETag").strip('\"'))
+		print()
 

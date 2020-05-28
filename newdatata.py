@@ -12,6 +12,7 @@ elif settings['action'] == 'upload_from_local_to_server':   upload_from_local_to
 elif settings['action'] == 'mirror_server_to_local':        mirror_server_to_local(settings['server'], settings['local'])
 elif settings['action'] == 'mirror_local_to_server':        mirror_local_to_server(settings['server'], settings['local'])
 elif settings['action'] == 'mirror_local_folders_by_name':  mirror_local_folders_by_name(settings['local'])
+elif settings['action'] == 'mirror_local_to_s3':            mirror_local_to_s3(settings['s3'], settings['local'])
 elif settings['action'] == 'compress_local_images':         compress_local_images(settings['local'])
 elif settings['action'] == 'compare_local_image_folders':   compare_local_image_folders(settings['local'])
 elif settings['action'] == 's3_upload':                     s3_upload(settings['s3'], settings['local'])

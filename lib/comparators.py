@@ -20,8 +20,6 @@ def compare_file_dicts(dictA, dictB, verbose=True):
 				diffs.append(dictA[fil])
 	return diffs
 
-
-
 # Return iles that are in dictA but not in dictB.
 def compare_only_missing(dictA, dictB, verbose=True):
 	diffs = []
@@ -44,3 +42,12 @@ def compare_only_different(dictA, dictB, verbose=True):
 			if verbose: print('--DIFFERENT-MD5')
 			diffs.append(dictA[fil])
 	return diffs
+
+# Remove file
+def clean_list(file_dict):
+	print("Removing unwanted files to work with")
+	for file in file_dict:
+		if file.get_name() == '.DS_Store':
+			print("  ignored '{}'".format(file.path))
+			file_dict.remove(file)
+	return file_dict

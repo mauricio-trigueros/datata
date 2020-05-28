@@ -9,7 +9,7 @@ from lib.commands_mysql import MysqlClient
 ACTIONS = {}
 
 server = ['serv-url','serv-user','serv-key','serv-folder']
-s3     = ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage']
+s3     = ['s3-key', 's3-secret', 's3-bucket', 's3-prefix', 's3-storage', 's3-acl']
 mysql  = ['mysql-host', 'mysql-port', 'mysql-user', 'mysql-pass', 'mysql-db']
 
 ACTIONS['download_from_server_to_local'] = {
@@ -51,6 +51,10 @@ ACTIONS['mirror_local_folders_by_name'] = {
 ACTIONS['compare_local_image_folders'] = {
 	'mandatory_values': ['local-folder', 'local-dest'],
 	'description': 'Compares two local folders'
+}
+ACTIONS['mirror_local_to_s3'] = {
+	'mandatory_values': s3 + ['dry-run', 'local-folder'],
+	'description': 'Compares two local folders'	
 }
 
 ALLOWED_PARAMETERS = [

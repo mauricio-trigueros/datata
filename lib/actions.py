@@ -1,10 +1,21 @@
 import os
 import sys
-from lib.comparators import compare_file_dicts, compare_only_missing, compare_only_different
+from lib.comparators import compare_file_dicts, compare_only_missing, compare_only_different, clean_list
 from lib.commands_local import LocalClient, LocalFile, get_temp_file
 from lib.commands_server import ServerClient, ServerFile
 from lib.commands_s3 import S3Client
 from lib.commands_mysql import MysqlClient
+
+def mirror_local_to_s3(s3client: S3Client, localClient: LocalClient):
+	origin_files = localClient.files_iterator(localClient.origin, s3prefix=s3client.prefix)
+	s3_files = s3client.folder_iterator(s3client.prefix)
+
+	# Find the files that are in LOCAL but NOT in S3 or that they are different
+	file_diff = clean_list(compare_file_dicts(origin_files, s3_files))
+
+	print("Uploading {} new or different files...".format(len(file_diff)))
+	for file in file_diff:
+		s3client.upload_single_file(file)
 
 def compress_local_images(localClient: LocalClient):
 	# First compress PNG files
